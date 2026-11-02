@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K.S. Computer Center | Online Admission</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:linear-gradient(135deg,#073b7a,#0879c9);color:white;padding:28px 16px;text-align:center}
+header h1{margin:0;font-size:30px}
+header p{margin:10px 0 0}
+nav{background:#052b59;padding:12px;text-align:center}
+nav a{color:white;text-decoration:none;margin:0 10px;font-weight:bold}
+.hero{padding:35px 16px;text-align:center;background:white}
+.hero h2{color:#0757a5;font-size:27px}
+.hero p{max-width:700px;margin:auto;line-height:1.7}
+.btn{display:inline-block;background:#0879c9;color:white;padding:12px 20px;border:0;border-radius:7px;text-decoration:none;font-weight:bold;cursor:pointer;margin:8px 4px}
+.btn.green{background:#13833b}
+section{padding:28px 16px;max-width:1100px;margin:auto}
+section h2{text-align:center;color:#0757a5}
+.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.course{background:white;padding:18px;border-radius:10px;box-shadow:0 2px 8px #0001;text-align:center}
+.course h3{margin:0 0 10px;font-size:18px}
+.course p{color:#5b6472;margin:8px 0}
+form{max-width:600px;margin:auto;background:white;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0001}
+label{display:block;margin:13px 0 6px;font-weight:bold}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}
+.notice{background:#fff7d6;padding:12px;border-radius:8px;line-height:1.6}
+footer{background:#052b59;color:white;text-align:center;padding:22px;line-height:1.8}
+footer a{color:#fff}
+@media(max-width:600px){header h1{font-size:24px}nav a{display:inline-block;margin:6px;font-size:14px}.hero h2{font-size:23px}}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>K.S. Computer Center</h1>
+  <p>सीखें कंप्यूटर, बनाएं अपना उज्ज्वल भविष्य</p>
+  <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
+</header>
+
+<nav>
+  <a href="#home">Home</a>
+  <a href="#courses">Courses</a>
+  <a href="#admission">Admission</a>
+  <a href="#contact">Contact</a>
+</nav>
+
+<div class="hero" id="home">
+  <h2>आपका अपना कंप्यूटर प्रशिक्षण केंद्र</h2>
+  <p>
+    Basic Computer से लेकर Advanced Computer Courses तक सीखें।
+    अनुभवी मार्गदर्शन के साथ कंप्यूटर शिक्षा और डिजिटल कौशल प्राप्त करें।
+  </p>
+  <a class="btn" href="#courses">कोर्स देखें</a>
+  <a class="btn green" href="#admission">Online Admission</a>
+</div>
+
+<section id="courses">
+  <h2>हमारे कंप्यूटर कोर्स</h2>
+  <div class="courses" id="courseList"></div>
+</section>
+
+<section id="admission">
+  <h2>Online Admission Form</h2>
+  <div class="notice">
+    <b>Payment:</b> अभी फीस केंद्र पर जमा करने का विकल्प उपलब्ध है।
+    कोर्स की फीस और अन्य जानकारी के लिए केंद्र से संपर्क करें।
+  </div>
+
+  <form id="admissionForm">
+    <label for="studentName">विद्यार्थी का पूरा नाम</label>
+    <input id="studentName" type="text" placeholder="अपना नाम लिखें" required>
+
+    <label for="studentMobile">मोबाइल नंबर</label>
+    <input id="studentMobile" type="tel" inputmode="numeric"
+           pattern="[0-9]{10}" maxlength="10"
+           placeholder="10 अंकों का मोबाइल नंबर" required>
+
+    <label for="studentCourse">कोर्स चुनें</label>
+    <select id="studentCourse" required>
+      <option value="">कोर्स चुनें</option>
+    </select>
+
+    <label>Payment Option</label>
+    <select id="paymentOption" required>
+      <option value="Pay at Center">Pay at Center — फीस केंद्र पर जमा करें</option>
+    </select>
+
+    <button class="btn green" type="submit">WhatsApp पर आवेदन भेजें</button>
+    <p id="formMessage"></p>
+  </form>
+</section>
+
+<section id="contact">
+  <h2>Contact Us</h2>
+  <div class="course">
+    <p><b>K.S. Computer Center</b></p>
+    <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
+    <p>Mobile: 9889066680</p>
+    <a class="btn green" href="https://wa.me/919889066680" target="_blank">
+      WhatsApp पर संपर्क करें
+    </a>
+  </div>
+</section>
+
+<footer>
+  <b>K.S. Computer Center</b><br>
+  Jamuka Doraha, Katiya Road, Shahjahanpur<br>
+  Mobile: 9889066680
+</footer>
+
+<script>
+const courses = [
+  "Basic Computer",
+  "ADCA",
+  "DCA",
+  "CCC",
+  "Tally",
+  "Typing English",
+  "Typing Hindi",
+  "Typing Urdu",
+  "MS Office",
+  "Photoshop",
+  "PageMaker",
+  "Data Entry Operator",
+  "Internet",
+  "Mock Test",
+  "Corel Draw",
+  "AI Courses",
+  "O Level",
+  "Other Courses"
+];
+
+const courseList = document.getElementById("courseList");
+const courseSelect = document.getElementById("studentCourse");
+
+courses.forEach(course => {
+  const card = document.createElement("div");
+  card.className = "course";
+  card.innerHTML = `
+    <h3>${course}</h3>
+    <p>फीस और अवधि की जानकारी के लिए संपर्क करें</p>
+    <button class="btn" type="button"
+      onclick="selectCourse('${course.replace(/'/g, "\\'")}')">
+      Apply Now
+    </button>
+  `;
+  courseList.appendChild(card);
+
+  const option = document.createElement("option");
+  option.value = course;
+  option.textContent = course;
+  courseSelect.appendChild(option);
+});
+
+function selectCourse(course) {
+  courseSelect.value = course;
+  document.getElementById("admission").scrollIntoView({behavior:"smooth"});
+}
+
+document.getElementById("admissionForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("studentName").value.trim();
+  const mobile = document.getElementById("studentMobile").value.trim();
+  const course = courseSelect.value;
+  const payment = document.getElementById("paymentOption").value;
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    document.getElementById("formMessage").textContent =
+      "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+    return;
+  }
+
+  const message =
+    "K.S. Computer Center Online Admission%0A" +
+    "Student Name: " + encodeURIComponent(name) + "%0A" +
+    "Mobile: " + encodeURIComponent(mobile) + "%0A" +
+    "Course: " + encodeURIComponent(course) + "%0A" +
+    "Payment: " + encodeURIComponent(payment);
+
+  window.open("https://wa.me/919889066680?text=" + message, "_blank");
+  document.getElementById("formMessage").textContent =
+    "WhatsApp खुल रहा है। कृपया वहाँ आवेदन भेज दें।";
+});
+</script>
+
+</body>
+</html>

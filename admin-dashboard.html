@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K.S. Computer Center — Admin Dashboard</title>
+
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#f1f5f9;
+      color:#1e293b;
+    }
+    header{
+      background:#0757a5;
+      color:white;
+      padding:18px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    header h1{margin:0;font-size:22px}
+    button{
+      border:0;
+      border-radius:7px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+    .logout{background:#fff;color:#0757a5}
+    main{max-width:1100px;margin:25px auto;padding:0 15px}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:15px;
+      margin-bottom:20px;
+    }
+    .stat{
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 2px 8px #0001;
+    }
+    .stat h2{margin:0;color:#0757a5;font-size:28px}
+    .stat p{margin:8px 0 0;color:#64748b}
+    .panel{
+      background:white;
+      padding:18px;
+      border-radius:10px;
+      box-shadow:0 2px 8px #0001;
+    }
+    .panel h2{margin-top:0}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:650px}
+    th,td{
+      padding:12px;
+      text-align:left;
+      border-bottom:1px solid #e2e8f0;
+      font-size:14px;
+    }
+    th{background:#eff6ff;color:#0757a5}
+    select{
+      padding:8px;
+      border:1px solid #cbd5e1;
+      border-radius:6px;
+    }
+    #message{color:#64748b;line-height:1.5}
+    .refresh{background:#0879c9;color:white}
+    @media(max-width:600px){
+      header h1{font-size:18px}
+      .panel{padding:12px}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>K.S. Computer Center — Admin Dashboard</h1>
+    <button class="logout" id="logoutButton">Logout</button>
+  </header>
+
+  <main>
+    <div class="stats">
+      <div class="stat">
+        <h2 id="totalCount">—</h2>
+        <p>कुल आवेदन</p>
+      </div>
+      <div class="stat">
+        <h2 id="newCount">—</h2>
+        <p>नए आवेदन</p>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h2>Admission Applications</h2>
+      <button class="refresh" id="refreshButton">Refresh आवेदन</button>
+      <p id="message">आवेदन लोड हो रहे हैं...</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>नाम</th>
+              <th>मोबाइल</th>
+              <th>Course</th>
+              <th>Payment</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admissionRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+      authDomain: "ks-computer-center.firebaseapp.com",
+      projectId: "ks-computer-center",
+      storageBucket: "ks-computer-center.firebasestorage.app",
+      messagingSenderId: "261490969527",
+      appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const message = document.getElementById("message");
+    const rows = document.getElementById("admissionRows");
+
+    auth.onAuthStateChanged(async function(user) {
+      if (!user) {
+        window.location.href = "./admin.html";
+        return;
+      }
+
+      loadAdmissions();
+    });
+
+    async function loadAdmissions() {
+      message.textContent = "आवेदन लोड हो रहे हैं...";
+      rows.innerHTML = "";
+
+      try {
+        const snapshot = await db.collection("admissions")
+          .orderBy("createdAt", "desc")
+          .get();
+
+        document.getElementById("totalCount").textContent = snapshot.size;
+
+        let newApplications = 0;
+
+        if (snapshot.empty) {
+          message.textContent = "अभी कोई आवेदन उपलब्ध नहीं है।";
+          document.getElementById("newCount").textContent = "0";
+          return;
+        }
+
+        snapshot.forEach(function(doc) {
+          const data = doc.data();
+          const status = data.status || "नया";
+
+          if (status === "नया") newApplications++;
+
+          const tr = document.createElement("tr");
+
+          const nameTd = document.createElement("td");
+          nameTd.textContent = data.name || "—";
+
+          const mobileTd = document.createElement("td");
+          mobileTd.textContent = data.mobile || "—";
+
+          const courseTd = document.createElement("td");
+          courseTd.textContent = data.course || "—";
+
+          const paymentTd = document.createElement("td");
+          paymentTd.textContent = data.payment || "—";
+
+          const statusTd = document.createElement("td");
+          const select = document.createElement("select");
+
+          ["नया", "संपर्क किया", "प्रवेश पूर्ण", "रद्द"].forEach(function(optionText) {
+            const option = document.createElement("option");
+            option.value = optionText;
+            option.textContent = optionText;
+            if (optionText === status) option.selected = true;
+            select.appendChild(option);
+          });
+
+          select.addEventListener("change", async function() {
+            try {
+              await db.collection("admissions").doc(doc.id).update({
+                status: select.value
+              });
+              message.textContent = "Status अपडेट हो गया।";
+            } catch(error) {
+              message.textContent = "Status अपडेट नहीं हुआ: " + error.message;
+            }
+          });
+
+          statusTd.appendChild(select);
+
+          tr.appendChild(nameTd);
+          tr.appendChild(mobileTd);
+          tr.appendChild(courseTd);
+          tr.appendChild(paymentTd);
+          tr.appendChild(statusTd);
+
+          rows.appendChild(tr);
+        });
+
+        document.getElementById("newCount").textContent = newApplications;
+        message.textContent = "आवेदन सूची लोड हो गई।";
+
+      } catch(error) {
+        message.textContent =
+          "आवेदन लोड नहीं हुए: " + error.message +
+          " — Firestore Rules में Admin Read अनुमति अभी जोड़नी होगी।";
+      }
+    }
+
+    document.getElementById("refreshButton").addEventListener("click", loadAdmissions);
+
+    document.getElementById("logoutButton").addEventListener("click", async function() {
+      await auth.signOut();
+      window.location.href = "./admin.html";
+    });
+  </script>
+</body>
+</html>

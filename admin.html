@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K.S. Computer Center — Admin Login</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#073b7a,#0879c9);
+  padding:16px;
+}
+.login-box{
+  width:100%;
+  max-width:420px;
+  background:white;
+  padding:28px;
+  border-radius:14px;
+  box-shadow:0 8px 30px #0003;
+}
+h1{color:#0757a5;text-align:center;margin-top:0}
+p{text-align:center;color:#64748b}
+label{display:block;font-weight:bold;margin:16px 0 7px}
+input{
+  width:100%;
+  padding:13px;
+  border:1px solid #cbd5e1;
+  border-radius:7px;
+  font-size:16px;
+}
+button{
+  width:100%;
+  margin-top:20px;
+  padding:13px;
+  background:#0879c9;
+  color:white;
+  border:0;
+  border-radius:7px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:disabled{opacity:.6;cursor:wait}
+#message{line-height:1.5;font-size:14px}
+.back{display:block;text-align:center;margin-top:18px;color:#0757a5}
+</style>
+</head>
+
+<body>
+<div class="login-box">
+  <h1>Admin Login</h1>
+  <p>K.S. Computer Center</p>
+
+  <form id="loginForm">
+    <label for="email">Admin Email</label>
+    <input id="email" type="email" placeholder="Admin email लिखें" required>
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Password लिखें" required>
+
+    <button id="loginButton" type="submit">Login</button>
+    <p id="message"></p>
+  </form>
+
+  <a class="back" href="./index.html">← मुख्य वेबसाइट पर जाएँ</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7igUA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+document.getElementById("loginForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("message");
+  const button = document.getElementById("loginButton");
+
+  button.disabled = true;
+  message.textContent = "Login हो रहा है...";
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    message.style.color = "green";
+    message.textContent = "Login सफल हुआ! Dashboard अगली सेटिंग में जोड़ा जाएगा।";
+  } catch(error) {
+    message.style.color = "red";
+
+    if(error.code === "auth/invalid-credential" ||
+       error.code === "auth/wrong-password" ||
+       error.code === "auth/user-not-found") {
+      message.textContent = "Email या Password सही नहीं है।";
+    } else {
+      message.textContent = "Login नहीं हो पाया: " + error.message;
+    }
+  }
+
+  button.disabled = false;
+});
+</script>
+</body>
+</html>

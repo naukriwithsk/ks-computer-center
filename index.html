@@ -113,26 +113,29 @@ footer a{color:#fff}
   Mobile: 9889066680
 </footer>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7igUA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const courses = [
-  "Basic Computer",
-  "ADCA",
-  "DCA",
-  "CCC",
-  "Tally",
-  "Typing English",
-  "Typing Hindi",
-  "Typing Urdu",
-  "MS Office",
-  "Photoshop",
-  "PageMaker",
-  "Data Entry Operator",
-  "Internet",
-  "Mock Test",
-  "Corel Draw",
-  "AI Courses",
-  "O Level",
-  "Other Courses"
+  "Basic Computer", "ADCA", "DCA", "CCC", "Tally",
+  "Typing English", "Typing Hindi", "Typing Urdu",
+  "MS Office", "Photoshop", "PageMaker",
+  "Data Entry Operator", "Internet", "Mock Test",
+  "Corel Draw", "AI Courses", "O Level", "Other Courses"
 ];
 
 const courseList = document.getElementById("courseList");
@@ -144,11 +147,13 @@ courses.forEach(course => {
   card.innerHTML = `
     <h3>${course}</h3>
     <p>फीस और अवधि की जानकारी के लिए संपर्क करें</p>
-    <button class="btn" type="button"
-      onclick="selectCourse('${course.replace(/'/g, "\\'")}')">
-      Apply Now
-    </button>
+    <button class="btn" type="button">Apply Now</button>
   `;
+
+  card.querySelector("button").addEventListener("click", () => {
+    selectCourse(course);
+  });
+
   courseList.appendChild(card);
 
   const option = document.createElement("option");
@@ -159,33 +164,63 @@ courses.forEach(course => {
 
 function selectCourse(course) {
   courseSelect.value = course;
-  document.getElementById("admission").scrollIntoView({behavior:"smooth"});
+  document.getElementById("admission").scrollIntoView({
+    behavior: "smooth"
+  });
 }
 
-document.getElementById("admissionForm").addEventListener("submit", function(e) {
+document.getElementById("admissionForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
   const name = document.getElementById("studentName").value.trim();
   const mobile = document.getElementById("studentMobile").value.trim();
   const course = courseSelect.value;
   const payment = document.getElementById("paymentOption").value;
+  const messageBox = document.getElementById("formMessage");
 
-  if (!/^[0-9]{10}$/.test(mobile)) {
-    document.getElementById("formMessage").textContent =
-      "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+  if (!name) {
+    messageBox.textContent = "कृपया विद्यार्थी का नाम लिखें।";
     return;
   }
 
-  const message =
-    "K.S. Computer Center Online Admission%0A" +
-    "Student Name: " + encodeURIComponent(name) + "%0A" +
-    "Mobile: " + encodeURIComponent(mobile) + "%0A" +
-    "Course: " + encodeURIComponent(course) + "%0A" +
-    "Payment: " + encodeURIComponent(payment);
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    messageBox.textContent = "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+    return;
+  }
 
-  window.open("https://wa.me/919889066680?text=" + message, "_blank");
-  document.getElementById("formMessage").textContent =
-    "WhatsApp खुल रहा है। कृपया वहाँ आवेदन भेज दें।";
+  if (!course) {
+    messageBox.textContent = "कृपया कोर्स चुनें।";
+    return;
+  }
+
+  messageBox.textContent = "आवेदन सेव हो रहा है...";
+
+  try {
+    // मोबाइल नंबर document ID है, इसलिए duplicate आवेदन रोकने में मदद मिलेगी।
+    await db.collection("admissions").doc(mobile).create({
+      name: name,
+      mobile: mobile,
+      course: course,
+      payment: payment,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    messageBox.textContent =
+      "आवेदन सफलतापूर्वक सेव हो गया! धन्यवाद।";
+
+    document.getElementById("admissionForm").reset();
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === "already-exists") {
+      messageBox.textContent =
+        "इस मोबाइल नंबर से आवेदन पहले ही जमा हो चुका है।";
+    } else {
+      messageBox.textContent =
+        "आवेदन सेव नहीं हो पाया। कृपया इंटरनेट और Firebase सेटिंग जाँचें।";
+    }
+  }
 });
 </script>
 

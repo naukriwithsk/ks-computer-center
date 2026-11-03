@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K.S. Computer Center — Course Management</title>
+
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#f1f5f9;
+      color:#1e293b;
+    }
+    header{
+      background:#0757a5;
+      color:white;
+      padding:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    header h1{margin:0;font-size:22px}
+    main{max-width:1000px;margin:25px auto;padding:0 15px}
+    .panel{
+      background:white;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 2px 8px #0001;
+      margin-bottom:20px;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+    }
+    label{display:block;font-weight:bold;margin-bottom:7px}
+    input{
+      width:100%;
+      padding:12px;
+      border:1px solid #cbd5e1;
+      border-radius:7px;
+      font-size:16px;
+    }
+    button{
+      border:0;
+      border-radius:7px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+    .primary{background:#0879c9;color:white}
+    .secondary{background:#e2e8f0;color:#1e293b}
+    .danger{background:#fee2e2;color:#991b1b}
+    .course-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:15px;
+    }
+    .course-card{
+      border:1px solid #e2e8f0;
+      border-radius:10px;
+      padding:16px;
+      background:#fff;
+    }
+    .course-card h3{margin:0 0 10px;color:#0757a5}
+    .course-card p{margin:7px 0}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .status{font-weight:bold}
+    #message{line-height:1.5;color:#64748b}
+    .back{color:white;text-decoration:none}
+    @media(max-width:600px){
+      header h1{font-size:18px}
+      .panel{padding:14px}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>K.S. Computer Center — Course Management</h1>
+    <a class="back" href="./admin-dashboard.html">← Dashboard</a>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>नया Course जोड़ें</h2>
+
+      <form id="courseForm">
+        <div class="form-grid">
+          <div>
+            <label for="courseName">Course का नाम</label>
+            <input id="courseName" type="text" placeholder="जैसे: Basic Computer" required>
+          </div>
+
+          <div>
+            <label for="courseFee">Course की फीस (₹)</label>
+            <input id="courseFee" type="number" min="0" placeholder="जैसे: 3000" required>
+          </div>
+
+          <div>
+            <label for="courseDuration">अवधि</label>
+            <input id="courseDuration" type="text" placeholder="जैसे: 3 Months" required>
+          </div>
+        </div>
+
+        <button class="primary" id="saveButton" type="submit" style="margin-top:15px">
+          Course जोड़ें
+        </button>
+      </form>
+
+      <p id="message">Courses लोड हो रहे हैं...</p>
+    </section>
+
+    <section class="panel">
+      <h2>आपके Courses</h2>
+      <div id="courseList" class="course-list"></div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+      authDomain: "ks-computer-center.firebaseapp.com",
+      projectId: "ks-computer-center",
+      storageBucket: "ks-computer-center.firebasestorage.app",
+      messagingSenderId: "261490969527",
+      appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const courseForm = document.getElementById("courseForm");
+    const courseList = document.getElementById("courseList");
+    const message = document.getElementById("message");
+    const saveButton = document.getElementById("saveButton");
+
+    auth.onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = "./admin.html";
+        return;
+      }
+
+      loadCourses();
+    });
+
+    async function loadCourses() {
+      message.textContent = "Courses लोड हो रहे हैं...";
+      courseList.innerHTML = "";
+
+      try {
+        const snapshot = await db.collection("courses").get();
+
+        if (snapshot.empty) {
+          message.textContent = "अभी कोई Course नहीं है।";
+          return;
+        }
+
+        message.textContent = "Courses लोड हो गए।";
+
+        snapshot.forEach(function(doc) {
+          const data = doc.data();
+
+          const card = document.createElement("div");
+          card.className = "course-card";
+
+          const title = document.createElement("h3");
+          title.textContent = data.name || "Course";
+
+          const fee = document.createElement("p");
+          fee.textContent = "फीस: ₹" + (data.fee ?? 0);
+
+          const duration = document.createElement("p");
+          duration.textContent = "अवधि: " + (data.duration || "—");
+
+          const status = document.createElement("p");
+          status.className = "status";
+          status.textContent = data.active ? "स्थिति: Active" : "स्थिति: Inactive";
+
+          const actions = document.createElement("div");
+          actions.className = "actions";
+
+          const editButton = document.createElement("button");
+          editButton.className = "secondary";
+          editButton.textContent = "Edit";
+          editButton.onclick = async function() {
+            const newName = prompt("Course का नया नाम:", data.name || "");
+            if (newName === null || !newName.trim()) return;
+
+            const newFee = prompt("नई फीस (₹):", data.fee ?? 0);
+            if (newFee === null || newFee.trim() === "" || isNaN(Number(newFee)) || Number(newFee) < 0) {
+              alert("कृपया सही फीस लिखें।");
+              return;
+            }
+
+            const newDuration = prompt("नई अवधि:", data.duration || "");
+            if (newDuration === null || !newDuration.trim()) return;
+
+            try {
+              await db.collection("courses").doc(doc.id).update({
+                name: newName.trim(),
+                fee: Number(newFee),
+                duration: newDuration.trim()
+              });
+              message.textContent = "Course अपडेट हो गया।";
+              loadCourses();
+            } catch(error) {
+              message.textContent = "Update नहीं हुआ: " + error.message;
+            }
+          };
+
+          const toggleButton = document.createElement("button");
+          toggleButton.className = "primary";
+          toggleButton.textContent = data.active ? "Inactive करें" : "Active करें";
+          toggleButton.onclick = async function() {
+            try {
+              await db.collection("courses").doc(doc.id).update({
+                active: !data.active
+              });
+              message.textContent = "Course की स्थिति अपडेट हो गई।";
+              loadCourses();
+            } catch(error) {
+              message.textContent = "Status अपडेट नहीं हुआ: " + error.message;
+            }
+          };
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "danger";
+          deleteButton.textContent = "Delete";
+          deleteButton.onclick = async function() {
+            const confirmDelete = confirm(
+              "क्या आप यह Course हमेशा के लिए हटाना चाहते हैं?"
+            );
+            if (!confirmDelete) return;
+
+            try {
+              await db.collection("courses").doc(doc.id).delete();
+              message.textContent = "Course हट गया।";
+              loadCourses();
+            } catch(error) {
+              message.textContent = "Course हट नहीं पाया: " + error.message;
+            }
+          };
+
+          actions.appendChild(editButton);
+          actions.appendChild(toggleButton);
+          actions.appendChild(deleteButton);
+
+          card.appendChild(title);
+          card.appendChild(fee);
+          card.appendChild(duration);
+          card.appendChild(status);
+          card.appendChild(actions);
+
+          courseList.appendChild(card);
+        });
+
+      } catch(error) {
+        message.textContent =
+          "Courses लोड नहीं हुए: " + error.message +
+          " — Firestore Rules में courses की Admin अनुमति जोड़नी होगी।";
+      }
+    }
+
+    courseForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("courseName").value.trim();
+      const fee = Number(document.getElementById("courseFee").value);
+      const duration = document.getElementById("courseDuration").value.trim();
+
+      if (!name || !duration || !Number.isFinite(fee) || fee < 0) {
+        message.textContent = "कृपया सभी जानकारी सही भरें।";
+        return;
+      }
+
+      saveButton.disabled = true;
+      saveButton.textContent = "सेव हो रहा है...";
+
+      try {
+        await db.collection("courses").add({
+          name: name,
+          fee: fee,
+          duration: duration,
+          active: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        courseForm.reset();
+        message.textContent = "Course सफलतापूर्वक जोड़ दिया गया।";
+        loadCourses();
+
+      } catch(error) {
+        message.textContent = "Course सेव नहीं हुआ: " + error.message;
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Course जोड़ें";
+      }
+    });
+  </script>
+</body>
+</html>

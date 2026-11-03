@@ -197,7 +197,7 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
 
   try {
     // मोबाइल नंबर document ID है, इसलिए duplicate आवेदन रोकने में मदद मिलेगी।
-    await db.collection("admissions").doc(mobile).create({
+    await db.collection("admissions").doc(mobile).set({
       name: name,
       mobile: mobile,
       course: course,

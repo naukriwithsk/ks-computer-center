@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Management - K.S. Computer Center</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f2f5f9;margin:0;padding:15px;color:#222}
+.container{max-width:950px;margin:auto}
+h2{text-align:center;color:#173b70}
+.card{background:white;padding:18px;margin:15px 0;border-radius:12px;box-shadow:0 2px 10px #0001}
+label{display:block;margin-top:12px;font-weight:bold}
+input,select{width:100%;padding:12px;margin-top:6px;box-sizing:border-box;border:1px solid #ccc;border-radius:7px}
+button{padding:12px 18px;background:#1769aa;color:white;border:0;border-radius:7px;cursor:pointer;margin-top:12px}
+button:hover{background:#104c80}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:#eef5ff;padding:15px;border-radius:9px;text-align:center}
+.stat strong{display:block;font-size:21px;margin-top:8px;color:#174c86}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+.table-wrap{overflow-x:auto}
+.status{font-weight:bold;color:#a05b00}
+#message{font-weight:bold;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>K.S. Computer Center</h2>
+<h3 style="text-align:center">Payment Management / फीस प्रबंधन</h3>
+
+<div class="card">
+<h3>विद्यार्थी चुनें</h3>
+<label>विद्यार्थी</label>
+<select id="studentSelect">
+<option value="">विद्यार्थी लोड हो रहे हैं...</option>
+</select>
+<div id="studentInfo"></div>
+</div>
+
+<div id="paymentArea" style="display:none">
+
+<div class="card">
+<h3>फीस का विवरण</h3>
+<div class="summary">
+<div class="stat">कुल फीस<strong id="totalDisplay">₹0</strong></div>
+<div class="stat">जमा फीस<strong id="paidDisplay">₹0</strong></div>
+<div class="stat">बाकी फीस<strong id="balanceDisplay">₹0</strong></div>
+<div class="stat">स्थिति<strong id="statusDisplay">Pending</strong></div>
+</div>
+
+<label>कुल कोर्स फीस (₹)</label>
+<input type="number" id="totalFee" min="0" placeholder="जैसे 5500">
+<button onclick="saveTotalFee()">कुल फीस सेव करें</button>
+</div>
+
+<div class="card">
+<h3>नई फीस जमा करें</h3>
+<label>जमा राशि (₹)</label>
+<input type="number" id="amount" min="1" placeholder="जैसे 1000">
+
+<label>भुगतान का तरीका</label>
+<select id="method">
+<option value="Cash">Cash</option>
+<option value="UPI">UPI</option>
+<option value="Bank Transfer">Bank Transfer</option>
+<option value="Other">Other</option>
+</select>
+
+<label>भुगतान की तारीख</label>
+<input type="date" id="paymentDate">
+
+<button onclick="addPayment()">फीस जमा करें</button>
+<p id="message"></p>
+</div>
+
+<div class="card">
+<h3>फीस जमा करने का इतिहास</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>तारीख</th>
+<th>राशि</th>
+<th>तरीका</th>
+</tr>
+</thead>
+<tbody id="history">
+<tr><td colspan="3">विद्यार्थी चुनें</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let selectedMobile = "";
+let selectedAdmission = null;
+let paymentRecords = [];
+
+const money = value => "₹" + Number(value || 0).toLocaleString("en-IN");
+
+auth.onAuthStateChanged(async user => {
+  if (!user || user.email !== "naukriwithsk@gmail.com") {
+    alert("केवल Admin इस पेज को खोल सकता है। कृपया Admin Login करें।");
+    location.href = "admin.html";
+    return;
+  }
+  loadStudents();
+});
+
+async function loadStudents() {
+  const select = document.getElementById("studentSelect");
+  select.innerHTML = '<option value="">विद्यार्थी चुनें</option>';
+
+  try {
+    const snapshot = await db.collection("admissions").get();
+
+    snapshot.forEach(doc => {
+      const s = doc.data();
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = `${s.name || "नाम नहीं"} - ${s.mobile || doc.id} (${s.course || ""})`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    alert("विद्यार्थी लोड नहीं हुए: " + error.message);
+  }
+}
+
+document.getElementById("studentSelect").addEventListener("change", async function() {
+  selectedMobile = this.value;
+  document.getElementById("paymentArea").style.display = "none";
+
+  if (!selectedMobile) return;
+
+  try {
+    const doc = await db.collection("admissions").doc(selectedMobile).get();
+    if (!doc.exists) return;
+
+    selectedAdmission = doc.data();
+    document.getElementById("studentInfo").textContent =
+      "नाम: " + (selectedAdmission.name || "") +
+      " | मोबाइल: " + (selectedAdmission.mobile || selectedMobile) +
+      " | कोर्स: " + (selectedAdmission.course || "");
+
+    document.getElementById("totalFee").value = selectedAdmission.feeTotal || "";
+    document.getElementById("paymentArea").style.display = "block";
+    await loadPayments();
+  } catch (error) {
+    alert("विद्यार्थी का विवरण नहीं खुला: " + error.message);
+  }
+});
+
+async function saveTotalFee() {
+  if (!selectedMobile) return;
+
+  const fee = Number(document.getElementById("totalFee").value);
+  if (!Number.isFinite(fee) || fee < 0) {
+    alert("सही कुल फीस लिखें।");
+    return;
+  }
+
+  try {
+    await db.collection("admissions").doc(selectedMobile).update({
+      feeTotal: fee
+    });
+    selectedAdmission.feeTotal = fee;
+    alert("कुल फीस सेव हो गई।");
+    updateSummary();
+  } catch (error) {
+    alert("फीस सेव नहीं हुई: " + error.message);
+  }
+}
+
+async function loadPayments() {
+  const history = document.getElementById("history");
+  history.innerHTML = "<tr><td colspan='3'>लोड हो रहा है...</td></tr>";
+
+  try {
+    const snapshot = await db.collection("admissions")
+      .doc(selectedMobile)
+      .collection("payments")
+      .orderBy("createdAt", "asc")
+      .get();
+
+    paymentRecords = [];
+    snapshot.forEach(doc => paymentRecords.push(doc.data()));
+
+    history.innerHTML = "";
+
+    if (paymentRecords.length === 0) {
+      history.innerHTML = "<tr><td colspan='3'>अभी कोई फीस जमा नहीं हुई।</td></tr>";
+    } else {
+      paymentRecords.forEach(p => {
+        const tr = document.createElement("tr");
+        [p.paymentDate || "-", money(p.amount), p.method || "-"].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        history.appendChild(tr);
+      });
+    }
+    updateSummary();
+  } catch (error) {
+    history.innerHTML = "<tr><td colspan='3'>इतिहास लोड नहीं हुआ।</td></tr>";
+    alert("Payment history error: " + error.message);
+  }
+}
+
+function updateSummary() {
+  const total = Number(selectedAdmission?.feeTotal || 0);
+  const paid = paymentRecords.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const balance = total - paid;
+
+  document.getElementById("totalDisplay").textContent = money(total);
+  document.getElementById("paidDisplay").textContent = money(paid);
+  document.getElementById("balanceDisplay").textContent = money(balance);
+
+  let status = "Pending";
+  if (total > 0 && balance <= 0) status = "Paid";
+  else if (paid > 0) status = "Partially Paid";
+
+  document.getElementById("statusDisplay").textContent = status;
+}
+
+async function addPayment() {
+  if (!selectedMobile) return;
+
+  const amount = Number(document.getElementById("amount").value);
+  const total = Number(selectedAdmission?.feeTotal || 0);
+  const paid = paymentRecords.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const balance = total - paid;
+  const method = document.getElementById("method").value;
+  const paymentDate = document.getElementById("paymentDate").value;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("सही जमा राशि लिखें।");
+    return;
+  }
+  if (total <= 0) {
+    alert("पहले कुल फीस सेव करें।");
+    return;
+  }
+  if (amount > balance) {
+    alert("जमा राशि बाकी फीस से ज्यादा नहीं हो सकती। बाकी फीस: " + money(balance));
+    return;
+  }
+  if (!paymentDate) {
+    alert("भुगतान की तारीख चुनें।");
+    return;
+  }
+
+  try {
+    await db.collection("admissions")
+      .doc(selectedMobile)
+      .collection("payments")
+      .add({
+        amount: amount,
+        method: method,
+        paymentDate: paymentDate,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    document.getElementById("amount").value = "";
+    document.getElementById("message").textContent = "फीस सफलतापूर्वक जमा हो गई।";
+    await loadPayments();
+  } catch (error) {
+    alert("फीस जमा नहीं हुई: " + error.message);
+  }
+}
+</script>
+</body>
+</html>

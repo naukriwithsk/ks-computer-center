@@ -1,241 +1,336 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K.S. Computer Center — Admin Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K.S. Computer Center — Admin Dashboard</title>
 
-  <style>
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:#f1f5f9;
-      color:#1e293b;
-    }
-    header{
-      background:#0757a5;
-      color:white;
-      padding:18px 20px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    header h1{margin:0;font-size:22px}
-    button{
-      border:0;
-      border-radius:7px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-    .logout{background:#fff;color:#0757a5}
-    main{max-width:1100px;margin:25px auto;padding:0 15px}
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:15px;
-      margin-bottom:20px;
-    }
-    .stat{
-      background:white;
-      padding:20px;
-      border-radius:10px;
-      box-shadow:0 2px 8px #0001;
-    }
-    .stat h2{margin:0;color:#0757a5;font-size:28px}
-    .stat p{margin:8px 0 0;color:#64748b}
-    .panel{
-      background:white;
-      padding:18px;
-      border-radius:10px;
-      box-shadow:0 2px 8px #0001;
-    }
-    .panel h2{margin-top:0}
-    .table-wrap{overflow-x:auto}
-    table{width:100%;border-collapse:collapse;min-width:650px}
-    th,td{
-      padding:12px;
-      text-align:left;
-      border-bottom:1px solid #e2e8f0;
-      font-size:14px;
-    }
-    th{background:#eff6ff;color:#0757a5}
-    select{
-      padding:8px;
-      border:1px solid #cbd5e1;
-      border-radius:6px;
-    }
-    #message{color:#64748b;line-height:1.5}
-    .refresh{background:#0879c9;color:white}
-    @media(max-width:600px){
-      header h1{font-size:18px}
-      .panel{padding:12px}
-    }
-  </style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#0757a5;color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px}
+button{border:0;border-radius:7px;padding:10px 14px;cursor:pointer;font-weight:bold}
+.logout{background:white;color:#0757a5}
+main{max-width:1200px;margin:25px auto;padding:0 15px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px}
+.stat,.panel{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px #0001}
+.stat h2{margin:0;color:#0757a5;font-size:28px}
+.stat p{margin:8px 0 0;color:#64748b}
+.panel{margin-bottom:22px}
+.panel h2{margin-top:0;color:#0757a5}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:14px}
+th{background:#eff6ff;color:#0757a5}
+select,input{padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px}
+.search-area{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+.search-area input{flex:1;min-width:200px}
+.search-area select{min-width:160px}
+.refresh{background:#0879c9;color:white}
+#message,#studentMessage{color:#64748b;line-height:1.5}
+.status-select{max-width:150px}
+@media(max-width:600px){
+ header h1{font-size:18px}
+ .panel{padding:12px}
+ .search-area input,.search-area select{width:100%}
+}
+</style>
 </head>
 
 <body>
-  <header>
-    <h1>K.S. Computer Center — Admin Dashboard</h1>
-    <button class="logout" id="logoutButton">Logout</button>
-  </header>
+<header>
+  <h1>K.S. Computer Center — Admin Dashboard</h1>
+  <button class="logout" id="logoutButton">Logout</button>
+</header>
 
-  <main>
-    <div class="stats">
-      <div class="stat">
-        <h2 id="totalCount">—</h2>
-        <p>कुल आवेदन</p>
-      </div>
-      <div class="stat">
-        <h2 id="newCount">—</h2>
-        <p>नए आवेदन</p>
-      </div>
+<main>
+  <div class="stats">
+    <div class="stat">
+      <h2 id="totalCount">—</h2>
+      <p>कुल आवेदन</p>
+    </div>
+    <div class="stat">
+      <h2 id="newCount">—</h2>
+      <p>नए आवेदन</p>
+    </div>
+    <div class="stat">
+      <h2 id="admittedCount">—</h2>
+      <p>प्रवेश पूर्ण</p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>Admission Applications</h2>
+    <button class="refresh" id="refreshButton">Refresh आवेदन</button>
+    <p id="message">आवेदन लोड हो रहे हैं...</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>नाम</th>
+            <th>मोबाइल</th>
+            <th>Course</th>
+            <th>Payment</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="admissionRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Student Management — विद्यार्थी रिकॉर्ड</h2>
+    <p>यहाँ सभी Admission Applications के विद्यार्थी रिकॉर्ड खोजें और फ़िल्टर करें।</p>
+
+    <div class="search-area">
+      <input id="studentSearch" type="search"
+        placeholder="नाम, मोबाइल या कोर्स से खोजें">
+
+      <select id="studentStatusFilter">
+        <option value="">सभी Status</option>
+        <option value="नया">नया</option>
+        <option value="संपर्क किया">संपर्क किया</option>
+        <option value="प्रवेश पूर्ण">प्रवेश पूर्ण</option>
+        <option value="रद्द">रद्द</option>
+      </select>
     </div>
 
-    <section class="panel">
-      <h2>Admission Applications</h2>
-      <button class="refresh" id="refreshButton">Refresh आवेदन</button>
-      <p id="message">आवेदन लोड हो रहे हैं...</p>
+    <p id="studentMessage">विद्यार्थी रिकॉर्ड लोड हो रहे हैं...</p>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>नाम</th>
-              <th>मोबाइल</th>
-              <th>Course</th>
-              <th>Payment</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="admissionRows"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>क्रम</th>
+            <th>विद्यार्थी का नाम</th>
+            <th>मोबाइल नंबर</th>
+            <th>कोर्स</th>
+            <th>Payment</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="studentRows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
-      authDomain: "ks-computer-center.firebaseapp.com",
-      projectId: "ks-computer-center",
-      storageBucket: "ks-computer-center.firebasestorage.app",
-      messagingSenderId: "261490969527",
-      appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
-    };
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
 
-    firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    const message = document.getElementById("message");
-    const rows = document.getElementById("admissionRows");
+const message = document.getElementById("message");
+const rows = document.getElementById("admissionRows");
+const studentRows = document.getElementById("studentRows");
+const studentMessage = document.getElementById("studentMessage");
 
-    auth.onAuthStateChanged(async function(user) {
-      if (!user) {
-        window.location.href = "./admin.html";
-        return;
-      }
+let allAdmissions = [];
 
-      loadAdmissions();
+auth.onAuthStateChanged(function(user) {
+  if (!user) {
+    window.location.href = "./admin.html";
+    return;
+  }
+
+  loadAdmissions();
+});
+
+async function loadAdmissions() {
+  message.textContent = "आवेदन लोड हो रहे हैं...";
+  studentMessage.textContent = "विद्यार्थी रिकॉर्ड लोड हो रहे हैं...";
+  rows.innerHTML = "";
+  studentRows.innerHTML = "";
+
+  try {
+    const snapshot = await db.collection("admissions")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    allAdmissions = [];
+
+    snapshot.forEach(function(doc) {
+      allAdmissions.push({
+        id: doc.id,
+        ...doc.data()
+      });
     });
 
-    async function loadAdmissions() {
-      message.textContent = "आवेदन लोड हो रहे हैं...";
-      rows.innerHTML = "";
+    document.getElementById("totalCount").textContent = allAdmissions.length;
 
-      try {
-        const snapshot = await db.collection("admissions")
-          .orderBy("createdAt", "desc")
-          .get();
+    const newCount = allAdmissions.filter(
+      item => (item.status || "नया") === "नया"
+    ).length;
 
-        document.getElementById("totalCount").textContent = snapshot.size;
+    const admittedCount = allAdmissions.filter(
+      item => item.status === "प्रवेश पूर्ण"
+    ).length;
 
-        let newApplications = 0;
+    document.getElementById("newCount").textContent = newCount;
+    document.getElementById("admittedCount").textContent = admittedCount;
 
-        if (snapshot.empty) {
-          message.textContent = "अभी कोई आवेदन उपलब्ध नहीं है।";
-          document.getElementById("newCount").textContent = "0";
-          return;
-        }
-
-        snapshot.forEach(function(doc) {
-          const data = doc.data();
-          const status = data.status || "नया";
-
-          if (status === "नया") newApplications++;
-
-          const tr = document.createElement("tr");
-
-          const nameTd = document.createElement("td");
-          nameTd.textContent = data.name || "—";
-
-          const mobileTd = document.createElement("td");
-          mobileTd.textContent = data.mobile || "—";
-
-          const courseTd = document.createElement("td");
-          courseTd.textContent = data.course || "—";
-
-          const paymentTd = document.createElement("td");
-          paymentTd.textContent = data.payment || "—";
-
-          const statusTd = document.createElement("td");
-          const select = document.createElement("select");
-
-          ["नया", "संपर्क किया", "प्रवेश पूर्ण", "रद्द"].forEach(function(optionText) {
-            const option = document.createElement("option");
-            option.value = optionText;
-            option.textContent = optionText;
-            if (optionText === status) option.selected = true;
-            select.appendChild(option);
-          });
-
-          select.addEventListener("change", async function() {
-            try {
-              await db.collection("admissions").doc(doc.id).update({
-                status: select.value
-              });
-              message.textContent = "Status अपडेट हो गया।";
-            } catch(error) {
-              message.textContent = "Status अपडेट नहीं हुआ: " + error.message;
-            }
-          });
-
-          statusTd.appendChild(select);
-
-          tr.appendChild(nameTd);
-          tr.appendChild(mobileTd);
-          tr.appendChild(courseTd);
-          tr.appendChild(paymentTd);
-          tr.appendChild(statusTd);
-
-          rows.appendChild(tr);
-        });
-
-        document.getElementById("newCount").textContent = newApplications;
-        message.textContent = "आवेदन सूची लोड हो गई।";
-
-      } catch(error) {
-        message.textContent =
-          "आवेदन लोड नहीं हुए: " + error.message +
-          " — Firestore Rules में Admin Read अनुमति अभी जोड़नी होगी।";
-      }
+    if (allAdmissions.length === 0) {
+      message.textContent = "अभी कोई आवेदन उपलब्ध नहीं है।";
+      studentMessage.textContent = "अभी कोई विद्यार्थी रिकॉर्ड उपलब्ध नहीं है।";
+      return;
     }
 
-    document.getElementById("refreshButton").addEventListener("click", loadAdmissions);
+    allAdmissions.forEach(function(data) {
+      const status = data.status || "नया";
+      const tr = document.createElement("tr");
 
-    document.getElementById("logoutButton").addEventListener("click", async function() {
-      await auth.signOut();
-      window.location.href = "./admin.html";
+      const nameTd = document.createElement("td");
+      nameTd.textContent = data.name || "—";
+
+      const mobileTd = document.createElement("td");
+      mobileTd.textContent = data.mobile || "—";
+
+      const courseTd = document.createElement("td");
+      courseTd.textContent = data.course || "—";
+
+      const paymentTd = document.createElement("td");
+      paymentTd.textContent = data.payment || "—";
+
+      const statusTd = document.createElement("td");
+      const select = document.createElement("select");
+      select.className = "status-select";
+
+      ["नया", "संपर्क किया", "प्रवेश पूर्ण", "रद्द"].forEach(function(optionText) {
+        const option = document.createElement("option");
+        option.value = optionText;
+        option.textContent = optionText;
+        if (optionText === status) option.selected = true;
+        select.appendChild(option);
+      });
+
+      select.addEventListener("change", async function() {
+        const newStatus = select.value;
+        select.disabled = true;
+
+        try {
+          await db.collection("admissions").doc(data.id).update({
+            status: newStatus
+          });
+
+          data.status = newStatus;
+          message.textContent = "Status अपडेट हो गया।";
+          updateStats();
+          renderStudents();
+
+        } catch(error) {
+          message.textContent = "Status अपडेट नहीं हुआ: " + error.message;
+          select.value = status;
+        } finally {
+          select.disabled = false;
+        }
+      });
+
+      statusTd.appendChild(select);
+      tr.append(nameTd, mobileTd, courseTd, paymentTd, statusTd);
+      rows.appendChild(tr);
     });
-  </script>
+
+    message.textContent = "आवेदन सूची लोड हो गई।";
+    renderStudents();
+
+  } catch(error) {
+    console.error(error);
+    message.textContent = "आवेदन लोड नहीं हुए: " + error.message;
+    studentMessage.textContent = "विद्यार्थी रिकॉर्ड लोड नहीं हो सके।";
+  }
+}
+
+function updateStats() {
+  document.getElementById("totalCount").textContent = allAdmissions.length;
+
+  document.getElementById("newCount").textContent =
+    allAdmissions.filter(item => (item.status || "नया") === "नया").length;
+
+  document.getElementById("admittedCount").textContent =
+    allAdmissions.filter(item => item.status === "प्रवेश पूर्ण").length;
+}
+
+function renderStudents() {
+  const search = document.getElementById("studentSearch")
+    .value.trim().toLowerCase();
+
+  const statusFilter = document.getElementById("studentStatusFilter").value;
+
+  const filtered = allAdmissions.filter(function(item) {
+    const status = item.status || "नया";
+
+    const matchesSearch =
+      (item.name || "").toLowerCase().includes(search) ||
+      (item.mobile || "").toLowerCase().includes(search) ||
+      (item.course || "").toLowerCase().includes(search);
+
+    const matchesStatus = !statusFilter || status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  studentRows.innerHTML = "";
+
+  if (filtered.length === 0) {
+    studentMessage.textContent = "कोई मिलान करने वाला रिकॉर्ड नहीं मिला।";
+    return;
+  }
+
+  filtered.forEach(function(item, index) {
+    const tr = document.createElement("tr");
+
+    [
+      index + 1,
+      item.name || "—",
+      item.mobile || "—",
+      item.course || "—",
+      item.payment || "—",
+      item.status || "नया"
+    ].forEach(function(value) {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+
+    studentRows.appendChild(tr);
+  });
+
+  studentMessage.textContent =
+    "कुल " + filtered.length + " विद्यार्थी रिकॉर्ड मिले।";
+}
+
+document.getElementById("studentSearch")
+  .addEventListener("input", renderStudents);
+
+document.getElementById("studentStatusFilter")
+  .addEventListener("change", renderStudents);
+
+document.getElementById("refreshButton")
+  .addEventListener("click", loadAdmissions);
+
+document.getElementById("logoutButton")
+  .addEventListener("click", async function() {
+    await auth.signOut();
+    window.location.href = "./admin.html";
+  });
+</script>
 </body>
 </html>

@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Login - K.S. Computer Center</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#1e293b}
+.container{max-width:850px;margin:auto}
+.card{background:white;padding:20px;border-radius:12px;margin:15px 0;box-shadow:0 2px 9px #0001}
+h2,h3{color:#0757a5}
+.login{max-width:430px;margin:55px auto}
+input,button{width:100%;padding:13px;margin-top:12px;border-radius:7px;font-size:15px}
+input{border:1px solid #cbd5e1}
+button{background:#0757a5;color:white;border:0;font-weight:bold;cursor:pointer}
+.logout{background:#64748b}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:#eff6ff;padding:15px;border-radius:9px;text-align:center}
+.stat strong{display:block;font-size:22px;color:#0757a5;margin-top:8px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+.table-wrap{overflow-x:auto}
+a{color:#0757a5}
+#dashboard{display:none}
+#message{line-height:1.5;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="loginBox" class="card login">
+<h2 style="text-align:center">Student Login</h2>
+<p style="text-align:center">K.S. Computer Center</p>
+
+<input type="email" id="email" placeholder="अपना Email लिखें">
+<input type="password" id="password" placeholder="अपना Password लिखें">
+<button id="loginButton" onclick="loginStudent()">Login करें</button>
+<p id="message"></p>
+</div>
+
+<div id="dashboard">
+<div class="card">
+<h2>K.S. Computer Center</h2>
+<h3>Student Dashboard / विद्यार्थी डैशबोर्ड</h3>
+<p id="studentInfo">लोड हो रहा है...</p>
+<button class="logout" onclick="logoutStudent()">Logout</button>
+</div>
+
+<div class="card">
+<h3>मेरी फीस का विवरण</h3>
+<div class="stats">
+<div class="stat">कुल फीस<strong id="totalFee">₹0</strong></div>
+<div class="stat">जमा फीस<strong id="paidFee">₹0</strong></div>
+<div class="stat">बाकी फीस<strong id="balanceFee">₹0</strong></div>
+<div class="stat">स्थिति<strong id="feeStatus">Pending</strong></div>
+</div>
+</div>
+
+<div class="card">
+<h3>फीस जमा करने का इतिहास</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>तारीख</th><th>राशि</th><th>तरीका</th></tr>
+</thead>
+<tbody id="paymentHistory"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>मेरे Certificates</h3>
+<div id="certificateList">Certificate की जानकारी लोड हो रही है...</div>
+</div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+
+function showMessage(text) {
+  document.getElementById("message").textContent = text;
+}
+
+async function loginStudent() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const button = document.getElementById("loginButton");
+
+  if (!email || !password) {
+    showMessage("Email और Password दोनों भरें।");
+    return;
+  }
+
+  button.disabled = true;
+  showMessage("Login हो रहा है...");
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    showMessage("Login नहीं हुआ: " + error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+    return;
+  }
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  await loadStudentDashboard(user);
+});
+
+async function loadStudentDashboard(user) {
+  const info = document.getElementById("studentInfo");
+
+  try {
+    const accountDoc = await db.collection("studentAccounts")
+      .doc(user.uid).get();
+
+    if (!accountDoc.exists) {
+      throw new Error("इस Login से कोई विद्यार्थी रिकॉर्ड जुड़ा नहीं है।");
+    }
+
+    const mobile = accountDoc.data().mobile;
+
+    const admissionDoc = await db.collection("admissions")
+      .doc(mobile).get();
+
+    if (!admissionDoc.exists) {
+      throw new Error("विद्यार्थी का रिकॉर्ड नहीं मिला।");
+    }
+
+    const student = admissionDoc.data();
+
+    info.textContent =
+      "नाम: " + (student.name || "-") +
+      " | कोर्स: " + (student.course || "-") +
+      " | मोबाइल: " + (student.mobile || mobile);
+
+    await loadPayments(mobile, student);
+    await loadCertificates(mobile);
+
+  } catch (error) {
+    info.textContent = "रिकॉर्ड नहीं खुला: " + error.message;
+  }
+}
+
+async function loadPayments(mobile, student) {
+  const tbody = document.getElementById("paymentHistory");
+  tbody.innerHTML = "";
+
+  const snapshot = await db.collection("admissions")
+    .doc(mobile)
+    .collection("payments")
+    .orderBy("createdAt", "asc")
+    .get();
+
+  let paid = 0;
+
+  snapshot.forEach(doc => {
+    const p = doc.data();
+    paid += Number(p.amount || 0);
+
+    const tr = document.createElement("tr");
+
+    [p.paymentDate || "-", money(p.amount), p.method || "-"]
+      .forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+
+    tbody.appendChild(tr);
+  });
+
+  if (snapshot.empty) {
+    tbody.innerHTML =
+      "<tr><td colspan='3'>अभी कोई फीस जमा नहीं हुई।</td></tr>";
+  }
+
+  const total = Number(student.feeTotal || 0);
+  const balance = total - paid;
+
+  document.getElementById("totalFee").textContent = money(total);
+  document.getElementById("paidFee").textContent = money(paid);
+  document.getElementById("balanceFee").textContent = money(balance);
+
+  let status = "Pending";
+  if (total > 0 && balance <= 0) status = "Paid";
+  else if (paid > 0) status = "Partially Paid";
+
+  document.getElementById("feeStatus").textContent = status;
+}
+
+async function loadCertificates(mobile) {
+  const container = document.getElementById("certificateList");
+  container.textContent = "Certificate लोड हो रहे हैं...";
+
+  try {
+    const snapshot = await db.collection("admissions")
+      .doc(mobile)
+      .collection("certificates")
+      .get();
+
+    container.innerHTML = "";
+
+    if (snapshot.empty) {
+      container.textContent =
+        "अभी कोई Certificate जारी नहीं हुआ है।";
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      const card = document.createElement("div");
+      card.style.padding = "12px";
+      card.style.borderBottom = "1px solid #ddd";
+
+      const heading = document.createElement("strong");
+      heading.textContent =
+        c.certificateName || c.course || "Certificate";
+      card.appendChild(heading);
+
+      const details = document.createElement("p");
+      details.textContent =
+        "Certificate Number: " + (c.certificateNumber || "-") +
+        " | जारी तारीख: " + (c.issueDate || "-");
+      card.appendChild(details);
+
+      if (c.certificateUrl) {
+        try {
+          const url = new URL(c.certificateUrl);
+          if (url.protocol === "https:" || url.protocol === "http:") {
+            const link = document.createElement("a");
+            link.href = url.href;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Certificate देखें";
+            card.appendChild(link);
+          }
+        } catch (e) {}
+      }
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    container.textContent =
+      "Certificate लोड नहीं हो सके: " + error.message;
+  }
+}
+
+async function logoutStudent() {
+  await auth.signOut();
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+}
+</script>
+</body>
+</html>

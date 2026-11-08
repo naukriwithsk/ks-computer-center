@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -8,87 +7,229 @@
 
 <style>
 *{box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#1e293b}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  margin:0;
+  padding:18px;
+  color:#1e293b;
+}
+
 .container{max-width:850px;margin:auto}
-.card{background:white;padding:20px;border-radius:12px;margin:15px 0;box-shadow:0 2px 9px #0001}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  margin:15px 0;
+  box-shadow:0 2px 9px #0001;
+}
+
 h2,h3{color:#0757a5}
+
 .login{max-width:430px;margin:55px auto}
-input,button{width:100%;padding:13px;margin-top:12px;border-radius:7px;font-size:15px}
+
+input,button{
+  width:100%;
+  padding:13px;
+  margin-top:12px;
+  border-radius:7px;
+  font-size:15px;
+}
+
 input{border:1px solid #cbd5e1}
-button{background:#0757a5;color:white;border:0;font-weight:bold;cursor:pointer}
+
+button{
+  background:#0757a5;
+  color:white;
+  border:0;
+  font-weight:bold;
+  cursor:pointer;
+}
+
 button:disabled{opacity:.6;cursor:not-allowed}
+
 .logout{background:#64748b}
-.download{background:#16803c;max-width:260px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.stat{background:#eff6ff;padding:15px;border-radius:9px;text-align:center}
-.stat strong{display:block;font-size:22px;color:#0757a5;margin-top:8px}
+
+.download{
+  background:#16803c;
+  max-width:280px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+}
+
+.stat{
+  background:#eff6ff;
+  padding:15px;
+  border-radius:9px;
+  text-align:center;
+}
+
+.stat strong{
+  display:block;
+  font-size:22px;
+  color:#0757a5;
+  margin-top:8px;
+}
+
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
 .table-wrap{overflow-x:auto}
+
 a{color:#0757a5}
+
 #dashboard{display:none}
+
 #message{line-height:1.5;overflow-wrap:anywhere}
-.certificate-card{padding:15px;border-bottom:1px solid #ddd}
+
+.certificate-card{
+  padding:16px;
+  border:1px solid #dbe3ee;
+  border-radius:10px;
+  margin:12px 0;
+  background:#fbfdff;
+}
+
+@media(max-width:500px){
+  body{padding:9px}
+  .card{padding:15px}
+}
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
+<!-- STUDENT LOGIN -->
+
 <div id="loginBox" class="card login">
+
 <h2 style="text-align:center">Student Login</h2>
 <p style="text-align:center">K.S. Computer Center</p>
 
 <input type="email" id="email" placeholder="अपना Email लिखें">
 <input type="password" id="password" placeholder="अपना Password लिखें">
+
 <button id="loginButton" onclick="loginStudent()">Login करें</button>
+
 <p id="message"></p>
+
 </div>
+
+
+<!-- STUDENT DASHBOARD -->
 
 <div id="dashboard">
 
 <div class="card">
+
 <h2>K.S. Computer Center</h2>
 <h3>Student Dashboard / विद्यार्थी डैशबोर्ड</h3>
+
 <p id="studentInfo">लोड हो रहा है...</p>
+
 <button class="logout" onclick="logoutStudent()">Logout</button>
+
 </div>
 
+
+<!-- FEES -->
+
 <div class="card">
+
 <h3>मेरी फीस का विवरण</h3>
+
 <div class="stats">
-<div class="stat">कुल फीस<strong id="totalFee">₹0</strong></div>
-<div class="stat">जमा फीस<strong id="paidFee">₹0</strong></div>
-<div class="stat">बाकी फीस<strong id="balanceFee">₹0</strong></div>
-<div class="stat">स्थिति<strong id="feeStatus">Pending</strong></div>
+
+<div class="stat">
+कुल फीस
+<strong id="totalFee">₹0</strong>
+</div>
+
+<div class="stat">
+जमा फीस
+<strong id="paidFee">₹0</strong>
+</div>
+
+<div class="stat">
+बाकी फीस
+<strong id="balanceFee">₹0</strong>
+</div>
+
+<div class="stat">
+स्थिति
+<strong id="feeStatus">Pending</strong>
+</div>
+
 </div>
 </div>
 
+
+<!-- PAYMENT HISTORY -->
+
 <div class="card">
+
 <h3>फीस जमा करने का इतिहास</h3>
+
 <div class="table-wrap">
+
 <table>
+
 <thead>
-<tr><th>तारीख</th><th>राशि</th><th>तरीका</th></tr>
+<tr>
+<th>तारीख</th>
+<th>राशि</th>
+<th>तरीका</th>
+</tr>
 </thead>
+
 <tbody id="paymentHistory"></tbody>
+
 </table>
+
 </div>
 </div>
+
+
+<!-- CERTIFICATES -->
 
 <div class="card">
+
 <h3>मेरे Certificates</h3>
-<div id="certificateList">Certificate की जानकारी लोड हो रही है...</div>
+
+<p>यहाँ आपके जारी किए गए Certificates दिखाई देंगे।</p>
+
+<div id="certificateList">
+Certificate की जानकारी लोड हो रही है...
+</div>
+
 </div>
 
 </div>
 </div>
+
+
+<!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+
 <script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
   authDomain: "ks-computer-center.firebaseapp.com",
@@ -103,18 +244,24 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+const money = n =>
+  "₹" + Number(n || 0).toLocaleString("en-IN");
 
-function showMessage(text) {
+
+function showMessage(text){
   document.getElementById("message").textContent = text;
 }
 
-async function loginStudent() {
+
+// STUDENT LOGIN
+
+async function loginStudent(){
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const button = document.getElementById("loginButton");
 
-  if (!email || !password) {
+  if(!email || !password){
     showMessage("Email और Password दोनों भरें।");
     return;
   }
@@ -122,19 +269,31 @@ async function loginStudent() {
   button.disabled = true;
   showMessage("Login हो रहा है...");
 
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (error) {
+  try{
+
+    await auth.signInWithEmailAndPassword(email,password);
+
+  }catch(error){
+
     showMessage("Login नहीं हुआ: " + error.message);
-  } finally {
+
+  }finally{
+
     button.disabled = false;
+
   }
 }
 
+
+// AUTH CHECK
+
 auth.onAuthStateChanged(async user => {
-  if (!user) {
+
+  if(!user){
+
     document.getElementById("loginBox").style.display = "block";
     document.getElementById("dashboard").style.display = "none";
+
     return;
   }
 
@@ -142,16 +301,22 @@ auth.onAuthStateChanged(async user => {
   document.getElementById("dashboard").style.display = "block";
 
   await loadStudentDashboard(user);
+
 });
 
-async function loadStudentDashboard(user) {
+
+// LOAD STUDENT DATA
+
+async function loadStudentDashboard(user){
+
   const info = document.getElementById("studentInfo");
 
-  try {
+  try{
+
     const accountDoc = await db.collection("studentAccounts")
       .doc(user.uid).get();
 
-    if (!accountDoc.exists) {
+    if(!accountDoc.exists){
       throw new Error("इस Login से कोई विद्यार्थी रिकॉर्ड जुड़ा नहीं है।");
     }
 
@@ -160,7 +325,7 @@ async function loadStudentDashboard(user) {
     const admissionDoc = await db.collection("admissions")
       .doc(mobile).get();
 
-    if (!admissionDoc.exists) {
+    if(!admissionDoc.exists){
       throw new Error("विद्यार्थी का रिकॉर्ड नहीं मिला।");
     }
 
@@ -171,45 +336,62 @@ async function loadStudentDashboard(user) {
       " | कोर्स: " + (student.course || "-") +
       " | मोबाइल: " + (student.mobile || mobile);
 
-    await loadPayments(mobile, student);
+    await loadPayments(mobile,student);
     await loadCertificates(mobile);
 
-  } catch (error) {
+  }catch(error){
+
     info.textContent = "रिकॉर्ड नहीं खुला: " + error.message;
+
   }
+
 }
 
-async function loadPayments(mobile, student) {
+
+// PAYMENT HISTORY
+
+async function loadPayments(mobile,student){
+
   const tbody = document.getElementById("paymentHistory");
+
   tbody.innerHTML = "";
 
   const snapshot = await db.collection("admissions")
     .doc(mobile)
     .collection("payments")
-    .orderBy("createdAt", "asc")
+    .orderBy("createdAt","asc")
     .get();
 
   let paid = 0;
 
   snapshot.forEach(doc => {
+
     const p = doc.data();
+
     paid += Number(p.amount || 0);
 
     const tr = document.createElement("tr");
 
-    [p.paymentDate || "-", money(p.amount), p.method || "-"]
+    [p.paymentDate || "-",money(p.amount),p.method || "-"]
       .forEach(value => {
+
         const td = document.createElement("td");
+
         td.textContent = value;
+
         tr.appendChild(td);
+
       });
 
     tbody.appendChild(tr);
+
   });
 
-  if (snapshot.empty) {
+  if(snapshot.empty){
+
     tbody.innerHTML =
       "<tr><td colspan='3'>अभी कोई फीस जमा नहीं हुई।</td></tr>";
+
   }
 
   const total = Number(student.feeTotal || 0);
@@ -220,17 +402,28 @@ async function loadPayments(mobile, student) {
   document.getElementById("balanceFee").textContent = money(balance);
 
   let status = "Pending";
-  if (total > 0 && balance <= 0) status = "Paid";
-  else if (paid > 0) status = "Partially Paid";
+
+  if(total > 0 && balance <= 0){
+    status = "Paid";
+  }else if(paid > 0){
+    status = "Partially Paid";
+  }
 
   document.getElementById("feeStatus").textContent = status;
+
 }
 
-async function loadCertificates(mobile) {
+
+// CERTIFICATE LIST
+
+async function loadCertificates(mobile){
+
   const container = document.getElementById("certificateList");
+
   container.textContent = "Certificate लोड हो रहे हैं...";
 
-  try {
+  try{
+
     const snapshot = await db.collection("admissions")
       .doc(mobile)
       .collection("certificates")
@@ -238,290 +431,477 @@ async function loadCertificates(mobile) {
 
     container.innerHTML = "";
 
-    if (snapshot.empty) {
+    if(snapshot.empty){
+
       container.textContent =
         "अभी कोई Certificate जारी नहीं हुआ है।";
+
       return;
     }
 
     snapshot.forEach(doc => {
+
       const c = doc.data();
 
       const card = document.createElement("div");
       card.className = "certificate-card";
 
       const heading = document.createElement("h3");
+
       heading.textContent =
         c.certificateName || c.course || "Certificate";
+
       card.appendChild(heading);
 
       const details = document.createElement("p");
+
       details.textContent =
         "विद्यार्थी: " + (c.studentName || "-") +
         " | कोर्स: " + (c.course || "-") +
         " | Certificate Number: " + (c.certificateNumber || "-") +
         " | जारी तारीख: " + (c.issueDate || "-");
+
       card.appendChild(details);
 
       const downloadButton = document.createElement("button");
+
       downloadButton.className = "download";
       downloadButton.textContent = "Download Certificate PDF";
 
-      downloadButton.addEventListener("click", () => {
+      downloadButton.addEventListener("click",() => {
         downloadCertificatePDF(c);
       });
 
       card.appendChild(downloadButton);
 
-      if (c.certificateUrl) {
-        try {
+      // MANUAL CERTIFICATE LINK
+
+      if(c.certificateUrl){
+
+        try{
+
           const url = new URL(c.certificateUrl);
 
-          if (url.protocol === "https:" || url.protocol === "http:") {
+          if(url.protocol === "https:" || url.protocol === "http:"){
+
             const link = document.createElement("a");
+
             link.href = url.href;
             link.target = "_blank";
             link.rel = "noopener noreferrer";
             link.textContent = "Manual Certificate देखें";
             link.style.display = "block";
             link.style.marginTop = "12px";
+
             card.appendChild(link);
+
           }
-        } catch (e) {}
+
+        }catch(e){}
+
       }
 
       container.appendChild(card);
+
     });
 
-  } catch (error) {
+  }catch(error){
+
     container.textContent =
       "Certificate लोड नहीं हो सके: " + error.message;
+
   }
+
 }
 
-/* Certificate PDF / Print Function */
 
-function escapeHTML(value) {
-  return String(value || "-").replace(/[&<>"']/g, function(char) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[char];
-  });
-}
+// PROFESSIONAL CERTIFICATE PDF
 
-function downloadCertificatePDF(c) {
+function downloadCertificatePDF(c){
 
-  const certificateName = escapeHTML(
-    c.certificateName || "Course Completion Certificate"
+  const esc = value => String(value || "-").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[ch]));
+
+  const certificateName = esc(
+    c.certificateName || "COURSE COMPLETION CERTIFICATE"
   );
 
-  const studentName = escapeHTML(c.studentName || "Student");
+  const studentName = esc(c.studentName || "Student");
+  const course = esc(c.course || "-");
+  const certificateNumber = esc(c.certificateNumber || "-");
+  const issueDate = esc(c.issueDate || "-");
 
-  const course = escapeHTML(c.course || "-");
+  const printWindow = window.open("","_blank");
 
-  const certificateNumber = escapeHTML(
-    c.certificateNumber || "-"
-  );
+  if(!printWindow){
 
-  const issueDate = escapeHTML(c.issueDate || "-");
-
-  const printWindow = window.open("", "_blank");
-
-  if (!printWindow) {
     alert("Popup blocked है। Browser में Popup Allow करके दोबारा कोशिश करें।");
+
     return;
   }
 
-  const html = `
-  <!DOCTYPE html>
-  <html lang="hi">
-  <head>
-  <meta charset="UTF-8">
-  <title>Certificate - ${certificateNumber}</title>
+  const certificateHTML = `
 
-  <style>
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>K.S. Computer Center Certificate</title>
+
+<style>
+
+@page{
+  size:A4 landscape;
+  margin:0;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Georgia,"Times New Roman",serif;
+  background:white;
+  color:#172554;
+}
+
+.page{
+  width:297mm;
+  height:210mm;
+  padding:12mm;
+  margin:auto;
+}
+
+.certificate{
+  height:100%;
+  width:100%;
+  border:3px solid #123b70;
+  padding:7px;
+  position:relative;
+  overflow:hidden;
+}
+
+.inner{
+  height:100%;
+  border:1.5px solid #c49a45;
+  padding:10mm 17mm 8mm;
+  text-align:center;
+  position:relative;
+}
+
+.corner{
+  position:absolute;
+  width:55px;
+  height:55px;
+  border-color:#c49a45;
+  border-style:solid;
+  z-index:2;
+}
+
+.tl{
+  top:5px;
+  left:5px;
+  border-width:3px 0 0 3px;
+}
+
+.tr{
+  top:5px;
+  right:5px;
+  border-width:3px 3px 0 0;
+}
+
+.bl{
+  bottom:5px;
+  left:5px;
+  border-width:0 0 3px 3px;
+}
+
+.br{
+  bottom:5px;
+  right:5px;
+  border-width:0 3px 3px 0;
+}
+
+.topline{
+  height:5px;
+  width:130px;
+  background:#c49a45;
+  margin:0 auto 9px;
+}
+
+.logo{
+  width:54px;
+  height:54px;
+  border:2px solid #c49a45;
+  border-radius:50%;
+  margin:0 auto 7px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial,sans-serif;
+  font-size:23px;
+  font-weight:bold;
+  color:#123b70;
+  background:#f5f8fc;
+}
+
+.institute{
+  font-family:Arial,sans-serif;
+  font-size:29px;
+  font-weight:800;
+  letter-spacing:3px;
+  color:#123b70;
+  margin:5px 0;
+}
+
+.address{
+  font-family:Arial,sans-serif;
+  font-size:11px;
+  color:#64748b;
+  letter-spacing:1px;
+}
+
+.goldline{
+  width:75%;
+  height:1px;
+  background:#c49a45;
+  margin:11px auto;
+}
+
+.heading{
+  font-size:25px;
+  font-weight:bold;
+  color:#b18432;
+  letter-spacing:2px;
+  margin:10px 0;
+  text-transform:uppercase;
+}
+
+.presented{
+  font-size:15px;
+  font-style:italic;
+  color:#64748b;
+  margin:8px 0;
+}
+
+.student{
+  display:inline-block;
+  min-width:350px;
+  border-bottom:2px solid #c49a45;
+  padding:5px 25px 9px;
+  color:#123b70;
+  font-size:34px;
+  font-weight:bold;
+  margin:3px auto 10px;
+}
+
+.description{
+  font-size:14px;
+  line-height:1.6;
+  max-width:700px;
+  margin:7px auto;
+  color:#334155;
+}
+
+.course-label{
+  font-family:Arial,sans-serif;
+  font-size:11px;
+  letter-spacing:2px;
+  color:#64748b;
+  margin-top:7px;
+}
+
+.course{
+  font-family:Arial,sans-serif;
+  font-size:23px;
+  font-weight:bold;
+  color:#123b70;
+  margin:5px 0 8px;
+}
+
+.footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  margin:15px 25px 0;
+  font-family:Arial,sans-serif;
+  font-size:11px;
+  color:#334155;
+}
+
+.sign{
+  width:175px;
+  border-top:1px solid #334155;
+  padding-top:7px;
+  text-align:center;
+}
+
+.number{
+  margin-top:10px;
+  font-family:Arial,sans-serif;
+  font-size:10px;
+  color:#64748b;
+  letter-spacing:1px;
+}
+
+.watermark{
+  position:absolute;
+  font-family:Arial,sans-serif;
+  font-size:100px;
+  font-weight:bold;
+  color:rgba(18,59,112,.035);
+  top:45%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+.print-button{
+  display:block;
+  margin:15px auto;
+  padding:12px 25px;
+  background:#123b70;
+  color:white;
+  border:0;
+  border-radius:6px;
+  font-size:15px;
+  cursor:pointer;
+}
+
+@media print{
+
+  .print-button{
+    display:none;
   }
 
-  * {
-    box-sizing: border-box;
+  body{
+    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;
   }
 
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: white;
-  }
+}
 
-  .certificate {
-    width: 100%;
-    min-height: 185mm;
-    border: 10px double #0757a5;
-    padding: 22px;
-    text-align: center;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+</style>
 
-  .top {
-    color: #0757a5;
-  }
+</head>
 
-  .top h1 {
-    font-size: 34px;
-    margin: 12px 0;
-    letter-spacing: 2px;
-  }
+<body>
 
-  .top h2 {
-    font-size: 23px;
-    color: #b7791f;
-    margin: 12px 0;
-  }
+<div class="page">
 
-  .subtitle {
-    font-size: 17px;
-    margin-top: 25px;
-  }
+<div class="certificate">
 
-  .student {
-    font-size: 34px;
-    font-weight: bold;
-    color: #0757a5;
-    border-bottom: 2px solid #b7791f;
-    display: inline-block;
-    padding: 8px 35px;
-    margin: 12px auto;
-  }
+<div class="inner">
 
-  .course {
-    font-size: 22px;
-    font-weight: bold;
-    margin: 15px;
-  }
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
 
-  .description {
-    font-size: 17px;
-    line-height: 1.7;
-    margin: 10px auto;
-    max-width: 750px;
-  }
+<div class="watermark">KSCC</div>
 
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    margin: 30px 35px 5px;
-    font-size: 14px;
-  }
+<div class="topline"></div>
 
-  .signature {
-    border-top: 1px solid #333;
-    padding-top: 8px;
-    min-width: 170px;
-  }
+<div class="logo">KS</div>
 
-  .number {
-    font-size: 13px;
-    margin-top: 15px;
-    color: #444;
-  }
+<div class="institute">
+K.S. COMPUTER CENTER
+</div>
 
-  .print-button {
-    display: block;
-    margin: 15px auto;
-    padding: 12px 25px;
-    background: #0757a5;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-  }
+<div class="address">
+JAMUKA DORAHA • KATIYA ROAD • SHAHJAHANPUR
+</div>
 
-  @media print {
-    .print-button {
-      display: none;
-    }
-  }
-  </style>
-  </head>
+<div class="goldline"></div>
 
-  <body>
+<div class="heading">
+${certificateName}
+</div>
 
-  <div class="certificate">
+<p class="presented">
+This certificate is proudly presented to
+</p>
 
-    <div class="top">
-      <h1>K.S. COMPUTER CENTER</h1>
-      <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
-      <h2>${certificateName}</h2>
-    </div>
+<div class="student">
+${studentName}
+</div>
 
-    <div>
-      <p class="subtitle">This certificate is proudly presented to</p>
+<p class="description">
+This is to certify that the above-mentioned student has successfully
+completed the following course at K.S. Computer Center.
+</p>
 
-      <div class="student">${studentName}</div>
+<div class="course-label">
+COURSE COMPLETED
+</div>
 
-      <p class="description">
-        This is to certify that the above-mentioned student has
-        successfully completed the following course at
-        K.S. Computer Center.
-      </p>
+<div class="course">
+${course}
+</div>
 
-      <div class="course">${course}</div>
+<p class="description">
+We appreciate the student's dedication and efforts and wish them
+success in their future endeavors.
+</p>
 
-      <p class="description">
-        We appreciate the student's efforts and wish them
-        success in their future endeavors.
-      </p>
-    </div>
+<div class="footer">
 
-    <div>
-      <div class="footer">
-        <div>
-          <p>Date: ${issueDate}</p>
-          <p class="signature">Issue Date</p>
-        </div>
+<div>
+<p>Date: ${issueDate}</p>
+<div class="sign">DATE OF ISSUE</div>
+</div>
 
-        <div>
-          <p class="signature">Authorized Signature</p>
-          <p>K.S. Computer Center</p>
-        </div>
-      </div>
+<div>
+<div class="sign">AUTHORIZED SIGNATURE</div>
+<p>K.S. Computer Center</p>
+</div>
 
-      <div class="number">
-        Certificate Number: ${certificateNumber}
-      </div>
-    </div>
+</div>
 
-  </div>
+<div class="number">
+OFFICIAL CERTIFICATE NUMBER: ${certificateNumber}
+</div>
 
-  <button class="print-button" onclick="window.print()">
-    Download / Save as PDF
-  </button>
+</div>
+</div>
+</div>
 
-  </body>
-  </html>
-  `;
+<button class="print-button" onclick="window.print()">
+Download / Save Certificate PDF
+</button>
+
+</body>
+</html>
+`;
 
   printWindow.document.open();
-  printWindow.document.write(html);
+  printWindow.document.write(certificateHTML);
   printWindow.document.close();
+
 }
 
-async function logoutStudent() {
+
+// LOGOUT
+
+async function logoutStudent(){
+
   await auth.signOut();
+
   document.getElementById("email").value = "";
   document.getElementById("password").value = "";
+
 }
+
 </script>
 
 </body>

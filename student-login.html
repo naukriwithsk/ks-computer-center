@@ -518,378 +518,103 @@ async function loadCertificates(mobile){
 // PROFESSIONAL CERTIFICATE PDF
 
 function downloadCertificatePDF(c){
-
-  const esc = value => String(value || "-").replace(/[&<>"']/g, ch => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+  const esc = value => String(value ?? "-").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
   }[ch]));
 
-  const certificateName = esc(
-    c.certificateName || "COURSE COMPLETION CERTIFICATE"
-  );
-
+  const certificateName = esc(c.certificateName || "CERTIFICATE OF COURSE COMPLETION");
   const studentName = esc(c.studentName || "Student");
   const course = esc(c.course || "-");
   const certificateNumber = esc(c.certificateNumber || "-");
   const issueDate = esc(c.issueDate || "-");
 
-  const printWindow = window.open("","_blank");
-
+  const printWindow = window.open("", "_blank");
   if(!printWindow){
-
     alert("Popup blocked है। Browser में Popup Allow करके दोबारा कोशिश करें।");
-
     return;
   }
 
   const certificateHTML = `
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<title>K.S. Computer Center Certificate</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K.S. Computer Center - Certificate</title>
 <style>
-
-@page{
-  size:A4 landscape;
-  margin:0;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  font-family:Georgia,"Times New Roman",serif;
-  background:white;
-  color:#172554;
-}
-
-.page{
-  width:297mm;
-  height:210mm;
-  padding:12mm;
-  margin:auto;
-}
-
-.certificate{
-  height:100%;
-  width:100%;
-  border:3px solid #123b70;
-  padding:7px;
-  position:relative;
-  overflow:hidden;
-}
-
-.inner{
-  height:100%;
-  border:1.5px solid #c49a45;
-  padding:10mm 17mm 8mm;
-  text-align:center;
-  position:relative;
-}
-
-.corner{
-  position:absolute;
-  width:55px;
-  height:55px;
-  border-color:#c49a45;
-  border-style:solid;
-  z-index:2;
-}
-
-.tl{
-  top:5px;
-  left:5px;
-  border-width:3px 0 0 3px;
-}
-
-.tr{
-  top:5px;
-  right:5px;
-  border-width:3px 3px 0 0;
-}
-
-.bl{
-  bottom:5px;
-  left:5px;
-  border-width:0 0 3px 3px;
-}
-
-.br{
-  bottom:5px;
-  right:5px;
-  border-width:0 3px 3px 0;
-}
-
-.topline{
-  height:5px;
-  width:130px;
-  background:#c49a45;
-  margin:0 auto 9px;
-}
-
-.logo{
-  width:54px;
-  height:54px;
-  border:2px solid #c49a45;
-  border-radius:50%;
-  margin:0 auto 7px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:Arial,sans-serif;
-  font-size:23px;
-  font-weight:bold;
-  color:#123b70;
-  background:#f5f8fc;
-}
-
-.institute{
-  font-family:Arial,sans-serif;
-  font-size:29px;
-  font-weight:800;
-  letter-spacing:3px;
-  color:#123b70;
-  margin:5px 0;
-}
-
-.address{
-  font-family:Arial,sans-serif;
-  font-size:11px;
-  color:#64748b;
-  letter-spacing:1px;
-}
-
-.goldline{
-  width:75%;
-  height:1px;
-  background:#c49a45;
-  margin:11px auto;
-}
-
-.heading{
-  font-size:25px;
-  font-weight:bold;
-  color:#b18432;
-  letter-spacing:2px;
-  margin:10px 0;
-  text-transform:uppercase;
-}
-
-.presented{
-  font-size:15px;
-  font-style:italic;
-  color:#64748b;
-  margin:8px 0;
-}
-
-.student{
-  display:inline-block;
-  min-width:350px;
-  border-bottom:2px solid #c49a45;
-  padding:5px 25px 9px;
-  color:#123b70;
-  font-size:34px;
-  font-weight:bold;
-  margin:3px auto 10px;
-}
-
-.description{
-  font-size:14px;
-  line-height:1.6;
-  max-width:700px;
-  margin:7px auto;
-  color:#334155;
-}
-
-.course-label{
-  font-family:Arial,sans-serif;
-  font-size:11px;
-  letter-spacing:2px;
-  color:#64748b;
-  margin-top:7px;
-}
-
-.course{
-  font-family:Arial,sans-serif;
-  font-size:23px;
-  font-weight:bold;
-  color:#123b70;
-  margin:5px 0 8px;
-}
-
-.footer{
-  display:flex;
-  justify-content:space-between;
-  align-items:end;
-  margin:15px 25px 0;
-  font-family:Arial,sans-serif;
-  font-size:11px;
-  color:#334155;
-}
-
-.sign{
-  width:175px;
-  border-top:1px solid #334155;
-  padding-top:7px;
-  text-align:center;
-}
-
-.number{
-  margin-top:10px;
-  font-family:Arial,sans-serif;
-  font-size:10px;
-  color:#64748b;
-  letter-spacing:1px;
-}
-
-.watermark{
-  position:absolute;
-  font-family:Arial,sans-serif;
-  font-size:100px;
-  font-weight:bold;
-  color:rgba(18,59,112,.035);
-  top:45%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  white-space:nowrap;
-  pointer-events:none;
-}
-
-.print-button{
-  display:block;
-  margin:15px auto;
-  padding:12px 25px;
-  background:#123b70;
-  color:white;
-  border:0;
-  border-radius:6px;
-  font-size:15px;
-  cursor:pointer;
-}
-
-@media print{
-
-  .print-button{
-    display:none;
-  }
-
-  body{
-    print-color-adjust:exact;
-    -webkit-print-color-adjust:exact;
-  }
-
-}
-
+@page{size:A4 landscape;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#e9eef5;color:#102b59}
+body{font-family:Georgia,"Times New Roman",serif}
+.sheet{width:297mm;height:210mm;margin:0 auto;padding:8mm;background:#fff}
+.frame{height:100%;position:relative;overflow:hidden;padding:5mm;border:3px solid #0b2b61;background:
+ radial-gradient(circle at 4% 55%,rgba(88,169,235,.16),transparent 22%),
+ radial-gradient(circle at 96% 72%,rgba(88,169,235,.15),transparent 22%),
+ linear-gradient(135deg,#fff 0%,#f8fbff 55%,#fff 100%)}
+.frame:before{content:"";position:absolute;inset:5px;border:1.5px solid #c99b35;pointer-events:none}
+.frame:after{content:"";position:absolute;inset:12px;border:1px solid rgba(201,155,53,.65);pointer-events:none}
+.ribbon{position:absolute;width:120mm;height:17mm;background:linear-gradient(100deg,#09265b,#174d91,#09265b);z-index:0;transform:rotate(-28deg)}
+.ribbon.left{top:-8mm;left:-36mm}
+.ribbon.right{bottom:-10mm;right:-34mm;transform:rotate(-28deg)}
+.content{position:relative;z-index:1;height:100%;padding:3mm 12mm 2mm;text-align:center;display:flex;flex-direction:column;align-items:center}
+.brand{font-family:Arial,sans-serif;font-weight:900;font-size:25pt;letter-spacing:2.2px;color:#092b63;margin-top:1mm}
+.address{font:10pt Arial,sans-serif;color:#334d73;letter-spacing:1px;margin-top:2px}
+.slogan{display:inline-block;margin:5px auto 7px;padding:5px 24px;border-radius:30px;background:#0b2d68;color:#fff;font:bold italic 11pt Georgia;letter-spacing:1px}
+.brandline{display:flex;align-items:center;gap:12px;width:100%;justify-content:center}
+.emblem{width:53px;height:53px;flex:none;border:3px double #c99b35;border-radius:50%;display:grid;place-items:center;background:#f7fbff;color:#0b2d68;font:bold 22px Arial;box-shadow:0 0 0 4px #fff,0 0 0 5px #c99b35}
+.badge{position:absolute;right:13mm;top:13mm;width:28mm;height:28mm;border-radius:50%;border:3px double #d3a33d;background:linear-gradient(145deg,#fff5c9,#e7bd54);display:grid;place-items:center;text-align:center;font:bold 9pt Arial;color:#17376d;box-shadow:0 3px 8px #0002}
+.title{width:76%;margin:3px auto 8px;padding:5px 12px 7px;border:3px solid #d6a53c;border-radius:18px;background:linear-gradient(100deg,#071e4d,#123d7d,#071e4d);color:white;font:bold 25pt Georgia;letter-spacing:2px;box-shadow:0 3px 0 #8f6921}
+.title small{display:block;color:#f4ce68;font: bold 12pt Arial;letter-spacing:2px;margin-top:1px}
+.present{font:italic 14pt Georgia;color:#34496a;margin:3px 0}
+.student{font:bold italic 30pt Georgia;color:#0a2c66;border-bottom:2px solid #d5a43b;min-width:125mm;padding:0 12px 4px;margin:1px auto 5px}
+.description{font:12pt/1.35 Georgia;color:#273c5e;margin:3px auto;max-width:220mm}
+.courseLabel{margin-top:5px;background:#0b2d68;color:#fff;border-top:2px solid #d5a43b;border-bottom:2px solid #d5a43b;padding:4px 25px;font:bold 11pt Arial;letter-spacing:2px}
+.course{font:bold 21pt Arial;color:#0b2d68;margin:3px 0 3px}
+.bottom{width:100%;display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;padding:0 4mm 2mm;font:10pt Arial;color:#233c65}
+.meta{text-align:left;line-height:1.8;border:1.5px solid #d5a43b;border-radius:10px;padding:5px 12px;min-width:83mm;background:#fffdf7}
+.seal{width:29mm;height:29mm;border:3px double #d5a43b;border-radius:50%;display:grid;place-items:center;background:radial-gradient(#fff6d6,#e7bd54);font:bold 8pt Arial;color:#17376d;text-align:center;line-height:1.2}
+.signature{width:58mm;text-align:center;border-top:1px solid #233c65;padding-top:5px;font-weight:bold}
+.number{font:9pt Arial;color:#465a7a;letter-spacing:1px;margin-top:5px}
+.footnote{font:8pt Arial;color:#64748b;margin-top:3px}
+.print{display:block;margin:12px auto;padding:11px 24px;background:#0b2d68;color:white;border:0;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer}
+@media print{body{background:#fff}.sheet{margin:0}.print{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
-
 </head>
-
 <body>
-
-<div class="page">
-
-<div class="certificate">
-
-<div class="inner">
-
-<div class="corner tl"></div>
-<div class="corner tr"></div>
-<div class="corner bl"></div>
-<div class="corner br"></div>
-
-<div class="watermark">KSCC</div>
-
-<div class="topline"></div>
-
-<div class="logo">KS</div>
-
-<div class="institute">
-K.S. COMPUTER CENTER
+<div class="sheet"><div class="frame">
+<div class="ribbon left"></div><div class="ribbon right"></div>
+<div class="content">
+<div class="brandline">
+  <div class="emblem">KS</div>
+  <div>
+    <div class="brand">K.S. COMPUTER CENTER</div>
+    <div class="address">JAMUKA DORAHA • KATIYA ROAD • SHAHJAHANPUR</div>
+    <div class="slogan">Learn&nbsp; • &nbsp;Practice&nbsp; • &nbsp;Grow</div>
+  </div>
 </div>
-
-<div class="address">
-JAMUKA DORAHA • KATIYA ROAD • SHAHJAHANPUR
+<div class="badge">SKILL<br>FOR A<br>BETTER FUTURE</div>
+<div class="title">${certificateName}<small>OF COURSE COMPLETION</small></div>
+<div class="present">This certificate is proudly presented to</div>
+<div class="student">${studentName}</div>
+<p class="description">This is to certify that the above-mentioned student has successfully completed the following course at K.S. Computer Center.</p>
+<div class="courseLabel">COURSE COMPLETED</div>
+<div class="course">${course}</div>
+<p class="description">We appreciate the student's dedication and efforts and wish them success in their future endeavors.</p>
+<div class="bottom">
+  <div class="meta"><b>Date of Issue:</b> ${issueDate}<br><b>Certificate No.:</b> ${certificateNumber}</div>
+  <div class="seal">★<br>KSCC<br>✦</div>
+  <div class="signature">Authorized Signature<br>K.S. Computer Center</div>
 </div>
-
-<div class="goldline"></div>
-
-<div class="heading">
-${certificateName}
-</div>
-
-<p class="presented">
-This certificate is proudly presented to
-</p>
-
-<div class="student">
-${studentName}
-</div>
-
-<p class="description">
-This is to certify that the above-mentioned student has successfully
-completed the following course at K.S. Computer Center.
-</p>
-
-<div class="course-label">
-COURSE COMPLETED
-</div>
-
-<div class="course">
-${course}
-</div>
-
-<p class="description">
-We appreciate the student's dedication and efforts and wish them
-success in their future endeavors.
-</p>
-
-<div class="footer">
-
-<div>
-<p>Date: ${issueDate}</p>
-<div class="sign">DATE OF ISSUE</div>
-</div>
-
-<div>
-<div class="sign">AUTHORIZED SIGNATURE</div>
-<p>K.S. Computer Center</p>
-</div>
-
-</div>
-
-<div class="number">
-OFFICIAL CERTIFICATE NUMBER: ${certificateNumber}
-</div>
-
-</div>
-</div>
-</div>
-
-<button class="print-button" onclick="window.print()">
-Download / Save Certificate PDF
-</button>
-
-</body>
-</html>
-`;
+<div class="number">OFFICIAL CERTIFICATE • K.S. COMPUTER CENTER</div>
+<div class="footnote">Learn • Practice • Grow</div>
+</div></div></div>
+<button class="print" onclick="window.print()">Download / Save Certificate PDF</button>
+</body></html>`;
 
   printWindow.document.open();
   printWindow.document.write(certificateHTML);
   printWindow.document.close();
-
 }
-
 
 // LOGOUT
 

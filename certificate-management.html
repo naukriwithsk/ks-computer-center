@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certificate Management</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#222}
+.box{max-width:600px;margin:25px auto;background:white;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0001}
+h2{text-align:center;color:#0757a5}
+label{display:block;font-weight:bold;margin-top:15px}
+input,select{width:100%;padding:12px;margin-top:6px;border:1px solid #ccc;border-radius:7px}
+button{width:100%;padding:13px;background:#0757a5;color:white;border:0;border-radius:7px;margin-top:18px;font-weight:bold;cursor:pointer}
+#message{line-height:1.5;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>K.S. Computer Center</h2>
+<h3>Certificate Management</h3>
+<p>विद्यार्थी का Certificate जारी करें।</p>
+
+<label>विद्यार्थी चुनें</label>
+<select id="student">
+<option value="">विद्यार्थी लोड हो रहे हैं...</option>
+</select>
+
+<label>Certificate का नाम</label>
+<input id="certificateName" value="Course Completion Certificate">
+
+<label>कोर्स का नाम</label>
+<input id="course" readonly>
+
+<label>जारी करने की तारीख</label>
+<input type="date" id="issueDate">
+
+<button id="issueButton" onclick="issueCertificate()">
+Certificate जारी करें
+</button>
+
+<p id="message"></p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let selectedStudent = null;
+
+auth.onAuthStateChanged(user => {
+  if (!user || user.email !== "naukriwithsk@gmail.com") {
+    location.href = "./admin.html";
+    return;
+  }
+  loadStudents();
+});
+
+async function loadStudents() {
+  const select = document.getElementById("student");
+  select.innerHTML = '<option value="">विद्यार्थी चुनें</option>';
+
+  try {
+    const snapshot = await db.collection("admissions").get();
+
+    snapshot.forEach(doc => {
+      const s = doc.data();
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent =
+        (s.name || "नाम नहीं") + " - " +
+        (s.course || "कोर्स नहीं");
+      select.appendChild(option);
+    });
+  } catch(error) {
+    document.getElementById("message").textContent =
+      "विद्यार्थी लोड नहीं हुए: " + error.message;
+  }
+}
+
+document.getElementById("student").addEventListener("change", async function() {
+  const mobile = this.value;
+  selectedStudent = null;
+  document.getElementById("course").value = "";
+
+  if (!mobile) return;
+
+  try {
+    const doc = await db.collection("admissions").doc(mobile).get();
+    if (!doc.exists) return;
+
+    selectedStudent = {
+      mobile: mobile,
+      ...doc.data()
+    };
+
+    document.getElementById("course").value =
+      selectedStudent.course || "";
+  } catch(error) {
+    document.getElementById("message").textContent =
+      "रिकॉर्ड नहीं खुला: " + error.message;
+  }
+});
+
+async function issueCertificate() {
+  const message = document.getElementById("message");
+  const button = document.getElementById("issueButton");
+
+  if (!selectedStudent) {
+    alert("पहले विद्यार्थी चुनें।");
+    return;
+  }
+
+  const certificateName =
+    document.getElementById("certificateName").value.trim();
+  const issueDate = document.getElementById("issueDate").value;
+
+  if (!certificateName || !issueDate) {
+    alert("Certificate का नाम और तारीख भरें।");
+    return;
+  }
+
+  if (!selectedStudent.name || !selectedStudent.course) {
+    alert("विद्यार्थी का नाम या कोर्स रिकॉर्ड में उपलब्ध नहीं है।");
+    return;
+  }
+
+  const certificateNumber =
+    "KSCC-" + Date.now().toString();
+
+  button.disabled = true;
+  message.textContent = "Certificate जारी हो रहा है...";
+
+  try {
+    await db.collection("admissions")
+      .doc(selectedStudent.mobile)
+      .collection("certificates")
+      .doc(certificateNumber)
+      .set({
+        certificateNumber: certificateNumber,
+        certificateName: certificateName,
+        studentName: selectedStudent.name,
+        course: selectedStudent.course,
+        issueDate: issueDate,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    message.textContent =
+      "Certificate सफलतापूर्वक जारी हो गया! Certificate Number: " +
+      certificateNumber;
+
+  } catch(error) {
+    message.textContent =
+      "Certificate जारी नहीं हुआ: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -30,7 +31,11 @@ input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;
 .notice{background:#fff7d6;padding:12px;border-radius:8px;line-height:1.6}
 footer{background:#052b59;color:white;text-align:center;padding:22px;line-height:1.8}
 footer a{color:#fff}
-@media(max-width:600px){header h1{font-size:24px}nav a{display:inline-block;margin:6px;font-size:14px}.hero h2{font-size:23px}}
+@media(max-width:600px){
+ header h1{font-size:24px}
+ nav a{display:inline-block;margin:6px;font-size:14px}
+ .hero h2{font-size:23px}
+}
 </style>
 </head>
 
@@ -47,13 +52,6 @@ footer a{color:#fff}
   <a href="#courses">Courses</a>
   <a href="#admission">Admission</a>
   <a href="#contact">Contact</a>
-  <a href="#mock-test">Mock Test</a>
-  <a href="#result">Download Result</a>
-  <a href="#marksheet">Download Marksheet</a>
-  <a href="#notice">Notice</a>
-  <a href="#student-login">Student Login</a>
-  <a href="#teacher-login">Teacher Login</a>
-  <a href="#admin-login">Admin Login</a>
 </nav>
 
 <div class="hero" id="home">
@@ -68,6 +66,7 @@ footer a{color:#fff}
 
 <section id="courses">
   <h2>हमारे कंप्यूटर कोर्स</h2>
+  <p id="courseLoading" style="text-align:center">कोर्स लोड हो रहे हैं...</p>
   <div class="courses" id="courseList"></div>
 </section>
 
@@ -89,7 +88,7 @@ footer a{color:#fff}
 
     <label for="studentCourse">कोर्स चुनें</label>
     <select id="studentCourse" required>
-      <option value="">कोर्स चुनें</option>
+      <option value="">कोर्स लोड हो रहे हैं...</option>
     </select>
 
     <label>Payment Option</label>
@@ -120,7 +119,6 @@ footer a{color:#fff}
   Mobile: 9889066680
 </footer>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -137,37 +135,87 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const courses = [
-  "Basic Computer", "ADCA", "DCA", "CCC", "Tally",
-  "Typing English", "Typing Hindi", "Typing Urdu",
-  "MS Office", "Photoshop", "PageMaker",
-  "Data Entry Operator", "Internet", "Mock Test",
-  "Corel Draw", "AI Courses", "O Level", "Other Courses"
-];
-
 const courseList = document.getElementById("courseList");
 const courseSelect = document.getElementById("studentCourse");
+const courseLoading = document.getElementById("courseLoading");
 
-courses.forEach(course => {
-  const card = document.createElement("div");
-  card.className = "course";
-  card.innerHTML = `
-    <h3>${course}</h3>
-    <p>फीस और अवधि की जानकारी के लिए संपर्क करें</p>
-    <button class="btn" type="button">Apply Now</button>
-  `;
+// Firestore से केवल Active Courses लोड करें
+async function loadCourses() {
+  courseList.innerHTML = "";
+  courseSelect.innerHTML = '<option value="">कोर्स चुनें</option>';
 
-  card.querySelector("button").addEventListener("click", () => {
-    selectCourse(course);
-  });
+  try {
+    const snapshot = await db.collection("courses")
+      .where("active", "==", true)
+      .get();
 
-  courseList.appendChild(card);
+    if (snapshot.empty) {
+      courseLoading.textContent = "अभी कोई Active Course उपलब्ध नहीं है।";
+      courseSelect.innerHTML =
+        '<option value="">अभी कोई कोर्स उपलब्ध नहीं है</option>';
+      return;
+    }
 
-  const option = document.createElement("option");
-  option.value = course;
-  option.textContent = course;
-  courseSelect.appendChild(option);
-});
+    courseLoading.textContent = "";
+
+    const courses = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.name) {
+        courses.push({
+          name: data.name,
+          fee: data.fee,
+          duration: data.duration
+        });
+      }
+    });
+
+    courses.sort((a, b) => a.name.localeCompare(b.name));
+
+    courses.forEach(course => {
+      const card = document.createElement("div");
+      card.className = "course";
+
+      const heading = document.createElement("h3");
+      heading.textContent = course.name;
+
+      const fee = document.createElement("p");
+      fee.textContent = course.fee !== undefined
+        ? "फीस: ₹" + course.fee
+        : "फीस के लिए संपर्क करें";
+
+      const duration = document.createElement("p");
+      duration.textContent = course.duration
+        ? "अवधि: " + course.duration
+        : "अवधि के लिए संपर्क करें";
+
+      const button = document.createElement("button");
+      button.className = "btn";
+      button.type = "button";
+      button.textContent = "Apply Now";
+
+      button.addEventListener("click", () => {
+        selectCourse(course.name);
+      });
+
+      card.append(heading, fee, duration, button);
+      courseList.appendChild(card);
+
+      const option = document.createElement("option");
+      option.value = course.name;
+      option.textContent = course.name;
+      courseSelect.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error("Course loading error:", error);
+    courseLoading.textContent =
+      "कोर्स लोड नहीं हुए। कृपया कुछ देर बाद दोबारा कोशिश करें।";
+    courseSelect.innerHTML =
+      '<option value="">कोर्स लोड नहीं हो सके</option>';
+  }
+}
 
 function selectCourse(course) {
   courseSelect.value = course;
@@ -175,6 +223,8 @@ function selectCourse(course) {
     behavior: "smooth"
   });
 }
+
+loadCourses();
 
 document.getElementById("admissionForm").addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -203,7 +253,6 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
   messageBox.textContent = "आवेदन सेव हो रहा है...";
 
   try {
-    // मोबाइल नंबर document ID है, इसलिए duplicate आवेदन रोकने में मदद मिलेगी।
     await db.collection("admissions").doc(mobile).set({
       name: name,
       mobile: mobile,
@@ -219,14 +268,8 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
 
   } catch (error) {
     console.error(error);
-
-    if (error.code === "already-exists") {
-      messageBox.textContent =
-        "इस मोबाइल नंबर से आवेदन पहले ही जमा हो चुका है।";
-    } else {
-      messageBox.textContent =
-        "आवेदन सेव नहीं हो पाया। कृपया इंटरनेट और Firebase सेटिंग जाँचें।";
-    }
+    messageBox.textContent =
+      "आवेदन सेव नहीं हो पाया। कृपया इंटरनेट और Firebase सेटिंग जाँचें।";
   }
 });
 </script>

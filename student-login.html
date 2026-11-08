@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Student Login - K.S. Computer Center</title>
+
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#1e293b}
@@ -15,7 +16,9 @@ h2,h3{color:#0757a5}
 input,button{width:100%;padding:13px;margin-top:12px;border-radius:7px;font-size:15px}
 input{border:1px solid #cbd5e1}
 button{background:#0757a5;color:white;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
 .logout{background:#64748b}
+.download{background:#16803c;max-width:260px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat{background:#eff6ff;padding:15px;border-radius:9px;text-align:center}
 .stat strong{display:block;font-size:22px;color:#0757a5;margin-top:8px}
@@ -25,10 +28,11 @@ th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
 a{color:#0757a5}
 #dashboard{display:none}
 #message{line-height:1.5;overflow-wrap:anywhere}
+.certificate-card{padding:15px;border-bottom:1px solid #ddd}
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
 
 <div id="loginBox" class="card login">
@@ -42,6 +46,7 @@ a{color:#0757a5}
 </div>
 
 <div id="dashboard">
+
 <div class="card">
 <h2>K.S. Computer Center</h2>
 <h3>Student Dashboard / विद्यार्थी डैशबोर्ड</h3>
@@ -75,6 +80,7 @@ a{color:#0757a5}
 <h3>मेरे Certificates</h3>
 <div id="certificateList">Certificate की जानकारी लोड हो रही है...</div>
 </div>
+
 </div>
 </div>
 
@@ -93,6 +99,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -239,30 +246,45 @@ async function loadCertificates(mobile) {
 
     snapshot.forEach(doc => {
       const c = doc.data();
-      const card = document.createElement("div");
-      card.style.padding = "12px";
-      card.style.borderBottom = "1px solid #ddd";
 
-      const heading = document.createElement("strong");
+      const card = document.createElement("div");
+      card.className = "certificate-card";
+
+      const heading = document.createElement("h3");
       heading.textContent =
         c.certificateName || c.course || "Certificate";
       card.appendChild(heading);
 
       const details = document.createElement("p");
       details.textContent =
-        "Certificate Number: " + (c.certificateNumber || "-") +
+        "विद्यार्थी: " + (c.studentName || "-") +
+        " | कोर्स: " + (c.course || "-") +
+        " | Certificate Number: " + (c.certificateNumber || "-") +
         " | जारी तारीख: " + (c.issueDate || "-");
       card.appendChild(details);
+
+      const downloadButton = document.createElement("button");
+      downloadButton.className = "download";
+      downloadButton.textContent = "Download Certificate PDF";
+
+      downloadButton.addEventListener("click", () => {
+        downloadCertificatePDF(c);
+      });
+
+      card.appendChild(downloadButton);
 
       if (c.certificateUrl) {
         try {
           const url = new URL(c.certificateUrl);
+
           if (url.protocol === "https:" || url.protocol === "http:") {
             const link = document.createElement("a");
             link.href = url.href;
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.textContent = "Certificate देखें";
+            link.textContent = "Manual Certificate देखें";
+            link.style.display = "block";
+            link.style.marginTop = "12px";
             card.appendChild(link);
           }
         } catch (e) {}
@@ -277,11 +299,230 @@ async function loadCertificates(mobile) {
   }
 }
 
+/* Certificate PDF / Print Function */
+
+function escapeHTML(value) {
+  return String(value || "-").replace(/[&<>"']/g, function(char) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[char];
+  });
+}
+
+function downloadCertificatePDF(c) {
+
+  const certificateName = escapeHTML(
+    c.certificateName || "Course Completion Certificate"
+  );
+
+  const studentName = escapeHTML(c.studentName || "Student");
+
+  const course = escapeHTML(c.course || "-");
+
+  const certificateNumber = escapeHTML(
+    c.certificateNumber || "-"
+  );
+
+  const issueDate = escapeHTML(c.issueDate || "-");
+
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    alert("Popup blocked है। Browser में Popup Allow करके दोबारा कोशिश करें।");
+    return;
+  }
+
+  const html = `
+  <!DOCTYPE html>
+  <html lang="hi">
+  <head>
+  <meta charset="UTF-8">
+  <title>Certificate - ${certificateNumber}</title>
+
+  <style>
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: white;
+  }
+
+  .certificate {
+    width: 100%;
+    min-height: 185mm;
+    border: 10px double #0757a5;
+    padding: 22px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .top {
+    color: #0757a5;
+  }
+
+  .top h1 {
+    font-size: 34px;
+    margin: 12px 0;
+    letter-spacing: 2px;
+  }
+
+  .top h2 {
+    font-size: 23px;
+    color: #b7791f;
+    margin: 12px 0;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    margin-top: 25px;
+  }
+
+  .student {
+    font-size: 34px;
+    font-weight: bold;
+    color: #0757a5;
+    border-bottom: 2px solid #b7791f;
+    display: inline-block;
+    padding: 8px 35px;
+    margin: 12px auto;
+  }
+
+  .course {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 15px;
+  }
+
+  .description {
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 10px auto;
+    max-width: 750px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    margin: 30px 35px 5px;
+    font-size: 14px;
+  }
+
+  .signature {
+    border-top: 1px solid #333;
+    padding-top: 8px;
+    min-width: 170px;
+  }
+
+  .number {
+    font-size: 13px;
+    margin-top: 15px;
+    color: #444;
+  }
+
+  .print-button {
+    display: block;
+    margin: 15px auto;
+    padding: 12px 25px;
+    background: #0757a5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  @media print {
+    .print-button {
+      display: none;
+    }
+  }
+  </style>
+  </head>
+
+  <body>
+
+  <div class="certificate">
+
+    <div class="top">
+      <h1>K.S. COMPUTER CENTER</h1>
+      <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
+      <h2>${certificateName}</h2>
+    </div>
+
+    <div>
+      <p class="subtitle">This certificate is proudly presented to</p>
+
+      <div class="student">${studentName}</div>
+
+      <p class="description">
+        This is to certify that the above-mentioned student has
+        successfully completed the following course at
+        K.S. Computer Center.
+      </p>
+
+      <div class="course">${course}</div>
+
+      <p class="description">
+        We appreciate the student's efforts and wish them
+        success in their future endeavors.
+      </p>
+    </div>
+
+    <div>
+      <div class="footer">
+        <div>
+          <p>Date: ${issueDate}</p>
+          <p class="signature">Issue Date</p>
+        </div>
+
+        <div>
+          <p class="signature">Authorized Signature</p>
+          <p>K.S. Computer Center</p>
+        </div>
+      </div>
+
+      <div class="number">
+        Certificate Number: ${certificateNumber}
+      </div>
+    </div>
+
+  </div>
+
+  <button class="print-button" onclick="window.print()">
+    Download / Save as PDF
+  </button>
+
+  </body>
+  </html>
+  `;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
 async function logoutStudent() {
   await auth.signOut();
   document.getElementById("email").value = "";
   document.getElementById("password").value = "";
 }
 </script>
+
 </body>
 </html>

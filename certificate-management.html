@@ -1,25 +1,467 @@
+
 <!DOCTYPE html>
-<html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Certificate Management</title>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certificate Management - K.S. Computer Center</title>
+
 <style>
-*{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#222}.box{max-width:650px;margin:25px auto;background:white;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0001}h2{text-align:center;color:#0757a5}label{display:block;font-weight:bold;margin-top:15px}input,select{width:100%;padding:12px;margin-top:6px;border:1px solid #ccc;border-radius:7px}button{width:100%;padding:13px;background:#0757a5;color:white;border:0;border-radius:7px;margin-top:18px;font-weight:bold;cursor:pointer}button:disabled{opacity:.6}#message{line-height:1.5;overflow-wrap:anywhere}#qrResult{display:none;margin-top:20px;padding:16px;background:#f8fafc;border:1px solid #dbe3ed;border-radius:10px;text-align:center}#qrcode{display:flex;justify-content:center;margin:14px auto}.small{font-size:13px;color:#555;line-height:1.5}
-</style></head><body><div class="box">
-<h2>K.S. Computer Center</h2><h3>Certificate Management</h3><p>विद्यार्थी का Certificate जारी करें। जारी होने के बाद QR Code भी मिलेगा।</p>
-<label>विद्यार्थी चुनें</label><select id="student"><option value="">विद्यार्थी लोड हो रहे हैं...</option></select>
-<label>Certificate का नाम</label><input id="certificateName" value="Course Completion Certificate">
-<label>कोर्स का नाम</label><input id="course" readonly>
-<label>जारी करने की तारीख</label><input type="date" id="issueDate">
-<button id="issueButton" onclick="issueCertificate()">Certificate जारी करें</button><p id="message"></p>
-<div id="qrResult"><h3 style="color:#0757a5">Certificate QR Code</h3><p class="small">QR Code स्कैन करके Certificate की ऑनलाइन जाँच करें।</p><div id="qrcode"></div><p id="certificateNumberText"></p><p><a id="verifyLink" href="#" target="_blank" rel="noopener">Verification Page खोलें</a></p><button type="button" onclick="downloadQR()">QR Code डाउनलोड करें</button></div>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:18px;color:#222}
+.box{max-width:700px;margin:25px auto;background:white;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0001}
+h2{text-align:center;color:#0757a5}
+label{display:block;font-weight:bold;margin-top:15px}
+input,select{width:100%;padding:12px;margin-top:6px;border:1px solid #ccc;border-radius:7px}
+button{padding:12px;background:#0757a5;color:white;border:0;border-radius:7px;margin-top:12px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6}
+.full{width:100%}
+.danger{background:#b42318}
+#message{line-height:1.5;overflow-wrap:anywhere}
+#qrResult{display:none;margin-top:20px;padding:16px;background:#f8fafc;border:1px solid #ddd;border-radius:10px;text-align:center}
+#qrcode{display:flex;justify-content:center;margin:14px}
+.item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
+.valid{color:green;font-weight:bold}
+.revoked{color:#b42318;font-weight:bold}
+.small{font-size:13px;color:#555;line-height:1.5}
+</style>
+</head>
+
+<body>
+<div class="box">
+
+<h2>K.S. Computer Center</h2>
+<h3>Certificate Management</h3>
+<p>Certificate जारी करें और पुराने Certificate को रद्द करें।</p>
+
+<label>विद्यार्थी चुनें</label>
+<select id="student">
+<option value="">विद्यार्थी लोड हो रहे हैं...</option>
+</select>
+
+<label>Certificate का नाम</label>
+<input id="certificateName" value="Course Completion Certificate">
+
+<label>कोर्स का नाम</label>
+<input id="course" readonly>
+
+<label>जारी करने की तारीख</label>
+<input type="date" id="issueDate">
+
+<button class="full" id="issueButton" onclick="issueCertificate()">
+Certificate जारी करें
+</button>
+
+<p id="message"></p>
+
+<div id="qrResult">
+<h3>Certificate QR Code</h3>
+<p class="small">QR स्कैन करके Certificate Verify करें।</p>
+<div id="qrcode"></div>
+<p id="certificateNumberText"></p>
+<a id="verifyLink" target="_blank" rel="noopener">Verification Page खोलें</a>
+<br>
+<button onclick="downloadQR()">QR Code डाउनलोड करें</button>
 </div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<hr>
+
+<h3>जारी किए गए Certificates</h3>
+<p class="small">
+किसी वैध Certificate को रद्द करने के लिए उसका बटन दबाएँ।
+रद्द होने के बाद QR जाँच में वह Valid नहीं दिखेगा।
+</p>
+
+<div id="certificateList">पहले विद्यार्थी चुनें।</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-const firebaseConfig={apiKey:"AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",authDomain:"ks-computer-center.firebaseapp.com",projectId:"ks-computer-center",storageBucket:"ks-computer-center.firebasestorage.app",messagingSenderId:"261490969527",appId:"1:261490969527:web:4fc4dfb5b96bc6a89b7632"};
-firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.firestore();let selectedStudent=null;
-auth.onAuthStateChanged(user=>{if(!user||user.email!=="naukriwithsk@gmail.com"){location.href="./admin.html";return;}loadStudents();});
-async function loadStudents(){const sel=document.getElementById("student");sel.innerHTML='<option value="">विद्यार्थी चुनें</option>';try{const snap=await db.collection("admissions").get();snap.forEach(doc=>{const s=doc.data(),o=document.createElement("option");o.value=doc.id;o.textContent=(s.name||"नाम नहीं")+" - "+(s.course||"कोर्स नहीं");sel.appendChild(o);});}catch(e){document.getElementById("message").textContent="विद्यार्थी लोड नहीं हुए: "+e.message;}}
-document.getElementById("student").addEventListener("change",async function(){selectedStudent=null;document.getElementById("course").value="";document.getElementById("qrResult").style.display="none";if(!this.value)return;try{const d=await db.collection("admissions").doc(this.value).get();if(d.exists){selectedStudent={mobile:this.value,...d.data()};document.getElementById("course").value=selectedStudent.course||"";}}catch(e){document.getElementById("message").textContent="रिकॉर्ड नहीं खुला: "+e.message;}});
-async function issueCertificate(){const msg=document.getElementById("message"),btn=document.getElementById("issueButton");if(!selectedStudent){alert("पहले विद्यार्थी चुनें।");return;}const certificateName=document.getElementById("certificateName").value.trim(),issueDate=document.getElementById("issueDate").value;if(!certificateName||!issueDate){alert("Certificate का नाम और तारीख भरें।");return;}if(!selectedStudent.name||!selectedStudent.course){alert("विद्यार्थी का नाम या कोर्स रिकॉर्ड में उपलब्ध नहीं है।");return;}
-const certificateNumber="KSCC-"+Date.now(),verifyURL=new URL("./verify-certificate.html",location.href);verifyURL.searchParams.set("cert",certificateNumber);btn.disabled=true;msg.textContent="Certificate जारी हो रहा है...";document.getElementById("qrResult").style.display="none";
-try{const privateData={certificateNumber,certificateName,studentName:selectedStudent.name,course:selectedStudent.course,issueDate,createdAt:firebase.firestore.FieldValue.serverTimestamp()};const publicData={certificateNumber,studentName:selectedStudent.name,course:selectedStudent.course,issueDate,status:"valid"};const batch=db.batch();batch.set(db.collection("admissions").doc(selectedStudent.mobile).collection("certificates").doc(certificateNumber),privateData);batch.set(db.collection("publicCertificates").doc(certificateNumber),publicData);await batch.commit();msg.textContent="Certificate सफलतापूर्वक जारी हो गया!";document.getElementById("certificateNumberText").textContent="Certificate Number: "+certificateNumber;const link=document.getElementById("verifyLink");link.href=verifyURL.href;link.textContent=verifyURL.href;const q=document.getElementById("qrcode");q.innerHTML="";if(typeof QRCode==="undefined"){q.textContent="QR library लोड नहीं हुई। इंटरनेट जाँचें।";}else{new QRCode(q,{text:verifyURL.href,width:190,height:190,colorDark:"#102a43",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});}document.getElementById("qrResult").style.display="block";}catch(e){msg.textContent="Certificate जारी नहीं हुआ: "+e.message;}finally{btn.disabled=false;}}
-function downloadQR(){const img=document.querySelector("#qrcode img"),canvas=document.querySelector("#qrcode canvas"),url=img?img.src:(canvas?canvas.toDataURL("image/png"):"");if(!url){alert("QR Code अभी तैयार नहीं है।");return;}const a=document.createElement("a");a.href=url;a.download="KSCC-Certificate-QR.png";document.body.appendChild(a);a.click();a.remove();}
-</script></body></html>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let student = null;
+
+auth.onAuthStateChanged(user => {
+  if (!user || user.email !== "naukriwithsk@gmail.com") {
+    location.href = "./admin.html";
+    return;
+  }
+
+  loadStudents();
+});
+
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+
+function escapeHTML(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
+
+// STUDENT LIST
+
+async function loadStudents() {
+
+  const select = document.getElementById("student");
+
+  select.innerHTML = '<option value="">विद्यार्थी चुनें</option>';
+
+  try {
+
+    const snapshot = await db.collection("admissions").get();
+
+    snapshot.forEach(doc => {
+
+      const s = doc.data();
+
+      const option = document.createElement("option");
+
+      option.value = doc.id;
+
+      option.textContent =
+        (s.name || "नाम नहीं") + " - " +
+        (s.course || "कोर्स नहीं");
+
+      select.appendChild(option);
+
+    });
+
+  } catch(error) {
+
+    message("विद्यार्थी लोड नहीं हुए: " + error.message);
+
+  }
+}
+
+// SELECT STUDENT
+
+document.getElementById("student").addEventListener("change", async function() {
+
+  student = null;
+
+  document.getElementById("course").value = "";
+
+  document.getElementById("qrResult").style.display = "none";
+
+  if (!this.value) {
+    document.getElementById("certificateList").textContent =
+      "पहले विद्यार्थी चुनें।";
+    return;
+  }
+
+  try {
+
+    const doc = await db.collection("admissions").doc(this.value).get();
+
+    if (!doc.exists) return;
+
+    student = {
+      mobile: this.value,
+      ...doc.data()
+    };
+
+    document.getElementById("course").value =
+      student.course || "";
+
+    await loadCertificates();
+
+  } catch(error) {
+
+    message("रिकॉर्ड नहीं खुला: " + error.message);
+
+  }
+
+});
+
+// LOAD CERTIFICATES
+
+async function loadCertificates() {
+
+  const box = document.getElementById("certificateList");
+
+  box.textContent = "Certificates लोड हो रहे हैं...";
+
+  try {
+
+    const snapshot = await db.collection("admissions")
+      .doc(student.mobile)
+      .collection("certificates")
+      .get();
+
+    if (snapshot.empty) {
+
+      box.textContent = "अभी कोई Certificate जारी नहीं हुआ।";
+
+      return;
+
+    }
+
+    box.innerHTML = "";
+
+    snapshot.forEach(doc => {
+
+      const d = doc.data();
+
+      const revoked = d.status === "revoked";
+
+      const item = document.createElement("div");
+
+      item.className = "item";
+
+      item.innerHTML =
+        "<b>" + escapeHTML(d.certificateName || "Certificate") + "</b>" +
+        "<p>Number: " + escapeHTML(d.certificateNumber || doc.id) + "</p>" +
+        "<p>जारी तारीख: " + escapeHTML(d.issueDate || "-") + "</p>" +
+        "<p class='" + (revoked ? "revoked" : "valid") + "'>" +
+        "स्थिति: " + (revoked ? "रद्द (Revoked)" : "वैध (Valid)") +
+        "</p>";
+
+      if (!revoked) {
+
+        const button = document.createElement("button");
+
+        button.className = "danger";
+
+        button.textContent = "यह Certificate रद्द करें";
+
+        button.onclick = () => {
+          revokeCertificate(doc.id, d.certificateNumber || doc.id);
+        };
+
+        item.appendChild(button);
+
+      }
+
+      box.appendChild(item);
+
+    });
+
+  } catch(error) {
+
+    box.textContent = "Certificates लोड नहीं हुए: " + error.message;
+
+  }
+
+}
+
+// REVOKE CERTIFICATE
+
+async function revokeCertificate(id, number) {
+
+  if (!student) return;
+
+  const confirmCancel = confirm(
+    "क्या आप Certificate " + number +
+    " को रद्द करना चाहते हैं? इसके बाद QR स्कैन करने पर यह Valid नहीं दिखेगा।"
+  );
+
+  if (!confirmCancel) return;
+
+  try {
+
+    const batch = db.batch();
+
+    const privateRef = db.collection("admissions")
+      .doc(student.mobile)
+      .collection("certificates")
+      .doc(id);
+
+    const publicRef = db.collection("publicCertificates")
+      .doc(number);
+
+    batch.update(privateRef, {
+      status: "revoked",
+      revokedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    batch.update(publicRef, {
+      status: "revoked"
+    });
+
+    await batch.commit();
+
+    message("Certificate सफलतापूर्वक रद्द कर दिया गया।");
+
+    await loadCertificates();
+
+  } catch(error) {
+
+    message("Certificate रद्द नहीं हुआ: " + error.message);
+
+  }
+
+}
+
+// ISSUE NEW CERTIFICATE
+
+async function issueCertificate() {
+
+  const btn = document.getElementById("issueButton");
+
+  if (!student) {
+    alert("पहले विद्यार्थी चुनें।");
+    return;
+  }
+
+  const name = document.getElementById("certificateName").value.trim();
+
+  const date = document.getElementById("issueDate").value;
+
+  if (!name || !date) {
+    alert("Certificate का नाम और तारीख भरें।");
+    return;
+  }
+
+  if (!student.name || !student.course) {
+    alert("विद्यार्थी का नाम या कोर्स उपलब्ध नहीं है।");
+    return;
+  }
+
+  const number = "KSCC-" + Date.now();
+
+  const url = new URL("./verify-certificate.html", location.href);
+
+  url.searchParams.set("cert", number);
+
+  btn.disabled = true;
+
+  message("Certificate जारी हो रहा है...");
+
+  document.getElementById("qrResult").style.display = "none";
+
+  try {
+
+    const batch = db.batch();
+
+    const privateData = {
+      certificateNumber: number,
+      certificateName: name,
+      studentName: student.name,
+      course: student.course,
+      issueDate: date,
+      status: "valid",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const publicData = {
+      certificateNumber: number,
+      studentName: student.name,
+      course: student.course,
+      issueDate: date,
+      status: "valid"
+    };
+
+    batch.set(
+      db.collection("admissions")
+        .doc(student.mobile)
+        .collection("certificates")
+        .doc(number),
+      privateData
+    );
+
+    batch.set(
+      db.collection("publicCertificates").doc(number),
+      publicData
+    );
+
+    await batch.commit();
+
+    message("Certificate सफलतापूर्वक जारी हो गया!");
+
+    document.getElementById("certificateNumberText").textContent =
+      "Certificate Number: " + number;
+
+    const link = document.getElementById("verifyLink");
+
+    link.href = url.href;
+
+    link.textContent = url.href;
+
+    const qr = document.getElementById("qrcode");
+
+    qr.innerHTML = "";
+
+    if (typeof QRCode !== "undefined") {
+
+      new QRCode(qr, {
+        text: url.href,
+        width: 190,
+        height: 190,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+    } else {
+
+      qr.textContent = "QR library लोड नहीं हुई।";
+
+    }
+
+    document.getElementById("qrResult").style.display = "block";
+
+    await loadCertificates();
+
+  } catch(error) {
+
+    message("Certificate जारी नहीं हुआ: " + error.message);
+
+  } finally {
+
+    btn.disabled = false;
+
+  }
+
+}
+
+// DOWNLOAD QR CODE
+
+function downloadQR() {
+
+  const img = document.querySelector("#qrcode img");
+
+  const canvas = document.querySelector("#qrcode canvas");
+
+  const url = img ? img.src :
+    (canvas ? canvas.toDataURL("image/png") : "");
+
+  if (!url) {
+    alert("QR Code तैयार नहीं है।");
+    return;
+  }
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = "KSCC-Certificate-QR.png";
+
+  a.click();
+
+}
+
+</script>
+</body>
+</html>

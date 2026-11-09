@@ -249,6 +249,69 @@ footer{
   .header-links{width:100%}
   .top-link{font-size:12px}
 }
+  
+/* QUICK LINK ICON FIX */
+
+.quick-card{
+  position:relative;
+  padding-left:75px;
+  min-height:105px;
+}
+
+.quick-card::before{
+  content:"";
+  position:absolute;
+  left:16px;
+  top:19px;
+  width:43px;
+  height:43px;
+  border-radius:12px;
+  background:var(--icon-bg,#dbeafe);
+  color:var(--icon-color,#1d4ed8);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:23px;
+  font-weight:bold;
+}
+
+.quick-card:nth-child(6n+1){--icon-bg:#dbeafe;--icon-color:#1d4ed8}
+.quick-card:nth-child(6n+2){--icon-bg:#dcfce7;--icon-color:#15803d}
+.quick-card:nth-child(6n+3){--icon-bg:#f3e8ff;--icon-color:#7e22ce}
+.quick-card:nth-child(6n+4){--icon-bg:#ffedd5;--icon-color:#c2410c}
+.quick-card:nth-child(6n+5){--icon-bg:#fce7f3;--icon-color:#be185d}
+.quick-card:nth-child(6n){--icon-bg:#cffafe;--icon-color:#0e7490}
+
+.quick-card:nth-child(1)::before{content:"D"}
+.quick-card:nth-child(2)::before{content:"S"}
+.quick-card:nth-child(3)::before{content:"C"}
+.quick-card:nth-child(4)::before{content:"₹"}
+.quick-card:nth-child(5)::before{content:"C"}
+.quick-card:nth-child(6)::before{content:"A"}
+.quick-card:nth-child(7)::before{content:"V"}
+
+.coming-soon{
+  position:relative;
+  padding-left:75px;
+  min-height:105px;
+}
+
+.coming-soon::before{
+  content:"+";
+  position:absolute;
+  left:16px;
+  top:19px;
+  width:43px;
+  height:43px;
+  border-radius:12px;
+  background:#e0e7ff;
+  color:#4338ca;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:25px;
+  font-weight:bold;
+}
 </style>
 </head>
 

@@ -1,130 +1,739 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K.S. Computer Center | Online Admission</title>
+
+<title>K.S. Computer Center | Online Admission & Student Services</title>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
-header{background:linear-gradient(135deg,#073b7a,#0879c9);color:white;padding:28px 16px;text-align:center}
-header h1{margin:0;font-size:30px}
-header p{margin:10px 0 0}
-nav{background:#052b59;padding:12px;text-align:center}
-nav a{color:white;text-decoration:none;margin:0 10px;font-weight:bold}
-.hero{padding:35px 16px;text-align:center;background:white}
-.hero h2{color:#0757a5;font-size:27px}
-.hero p{max-width:700px;margin:auto;line-height:1.7}
-.btn{display:inline-block;background:#0879c9;color:white;padding:12px 20px;border:0;border-radius:7px;text-decoration:none;font-weight:bold;cursor:pointer;margin:8px 4px}
+
+html{scroll-behavior:smooth}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f7fb;
+  color:#172033;
+}
+
+/* HEADER */
+
+header{
+  background:linear-gradient(120deg,#092c68,#0879c9,#6d28d9);
+  color:white;
+  padding:27px 15px;
+  text-align:center;
+}
+
+header h1{
+  margin:0;
+  font-size:32px;
+}
+
+header p{
+  margin:9px 0 0;
+  line-height:1.6;
+}
+
+/* NAVIGATION */
+
+nav{
+  background:#082b59;
+  padding:12px 10px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow:0 4px 12px #0002;
+}
+
+nav a{
+  color:white;
+  text-decoration:none;
+  padding:11px 13px;
+  border-radius:7px;
+  font-weight:bold;
+  font-size:14px;
+  transition:.2s;
+}
+
+nav a:hover{
+  background:#2563eb;
+  color:white;
+}
+
+nav .login-link{
+  background:#16a34a;
+}
+
+nav .admin-link{
+  background:#dc2626;
+}
+
+/* HERO */
+
+.hero{
+  padding:55px 16px;
+  text-align:center;
+  background:linear-gradient(135deg,#e0f2fe,#eef2ff,#f5eaff);
+}
+
+.hero h2{
+  color:#0757a5;
+  font-size:30px;
+  margin-top:0;
+}
+
+.hero p{
+  max-width:750px;
+  margin:auto;
+  line-height:1.8;
+  font-size:16px;
+}
+
+.btn{
+  display:inline-block;
+  background:#0879c9;
+  color:white;
+  padding:12px 20px;
+  border:0;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:bold;
+  cursor:pointer;
+  margin:8px 4px;
+  transition:.2s;
+}
+
+.btn:hover{
+  opacity:.88;
+  transform:translateY(-2px);
+}
+
 .btn.green{background:#13833b}
-section{padding:28px 16px;max-width:1100px;margin:auto}
-section h2{text-align:center;color:#0757a5}
-.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-.course{background:white;padding:18px;border-radius:10px;box-shadow:0 2px 8px #0001;text-align:center}
-.course h3{margin:0 0 10px;font-size:18px}
-.course p{color:#5b6472;margin:8px 0}
-form{max-width:600px;margin:auto;background:white;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0001}
-label{display:block;margin:13px 0 6px;font-weight:bold}
-input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}
-.notice{background:#fff7d6;padding:12px;border-radius:8px;line-height:1.6}
-footer{background:#052b59;color:white;text-align:center;padding:22px;line-height:1.8}
-footer a{color:#fff}
+.btn.purple{background:#7c3aed}
+.btn.orange{background:#ea580c}
+
+/* GENERAL SECTION */
+
+section{
+  padding:35px 16px;
+  max-width:1150px;
+  margin:auto;
+}
+
+section h2{
+  text-align:center;
+  color:#0757a5;
+  margin-top:0;
+  margin-bottom:22px;
+  font-size:26px;
+}
+
+.section-description{
+  text-align:center;
+  color:#64748b;
+  line-height:1.7;
+  margin-bottom:25px;
+}
+
+/* COURSES */
+
+.courses{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:16px;
+}
+
+.course{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 3px 12px #0001;
+  text-align:center;
+  border-top:4px solid #2563eb;
+  transition:.2s;
+}
+
+.course:hover{
+  transform:translateY(-3px);
+  box-shadow:0 7px 18px #0002;
+}
+
+.course h3{
+  margin:0 0 10px;
+  font-size:18px;
+}
+
+.course p{
+  color:#5b6472;
+  margin:8px 0;
+}
+
+/* SERVICE LINKS */
+
+.services{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:17px;
+}
+
+.service-card{
+  background:white;
+  padding:21px;
+  border-radius:13px;
+  box-shadow:0 3px 12px #0001;
+  text-decoration:none;
+  color:#172033;
+  border-left:5px solid #2563eb;
+  transition:.2s;
+  display:block;
+}
+
+.service-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 18px #0002;
+  background:#f8faff;
+}
+
+.service-icon{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  background:#dbeafe;
+  color:#1d4ed8;
+  font-size:24px;
+  font-weight:bold;
+  margin-bottom:12px;
+}
+
+.service-card h3{
+  margin:0 0 9px;
+  font-size:17px;
+}
+
+.service-card p{
+  color:#64748b;
+  font-size:14px;
+  line-height:1.5;
+  margin:0;
+}
+
+.service-card.green-card{border-left-color:#16a34a}
+.service-card.purple-card{border-left-color:#9333ea}
+.service-card.orange-card{border-left-color:#ea580c}
+.service-card.pink-card{border-left-color:#db2777}
+.service-card.red-card{border-left-color:#dc2626}
+.service-card.teal-card{border-left-color:#0891b2}
+
+.coming-card{
+  cursor:default;
+  background:#f8fafc;
+  border:1px dashed #94a3b8;
+  border-left:5px solid #94a3b8;
+}
+
+.coming-card:hover{
+  transform:none;
+  box-shadow:0 3px 12px #0001;
+}
+
+.coming-label{
+  display:inline-block;
+  margin-top:12px;
+  background:#fef3c7;
+  color:#92400e;
+  border-radius:20px;
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:bold;
+}
+
+/* ADMISSION */
+
+form{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:13px;
+  box-shadow:0 3px 12px #0001;
+}
+
+label{
+  display:block;
+  margin:14px 0 7px;
+  font-weight:bold;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  font-size:16px;
+}
+
+.notice{
+  background:#fff7d6;
+  padding:14px;
+  border-radius:9px;
+  line-height:1.7;
+  margin-bottom:18px;
+}
+
+#formMessage{
+  font-weight:bold;
+  line-height:1.6;
+}
+
+/* CONTACT */
+
+.contact-box{
+  background:white;
+  padding:25px;
+  border-radius:13px;
+  box-shadow:0 3px 12px #0001;
+  text-align:center;
+  line-height:1.8;
+}
+
+.about-box{
+  background:linear-gradient(135deg,#e0f2fe,#ede9fe);
+  padding:25px;
+  border-radius:13px;
+  line-height:1.8;
+  text-align:center;
+}
+
+/* FOOTER */
+
+footer{
+  background:linear-gradient(120deg,#052b59,#123c91);
+  color:white;
+  text-align:center;
+  padding:27px 15px;
+  line-height:1.9;
+}
+
+footer a{
+  color:#fff;
+  text-decoration:none;
+  margin:5px 8px;
+}
+
+footer a:hover{text-decoration:underline}
+
+.footer-links{
+  margin:12px 0;
+}
+
 @media(max-width:600px){
- header h1{font-size:24px}
- nav a{display:inline-block;margin:6px;font-size:14px}
- .hero h2{font-size:23px}
+
+  header h1{font-size:25px}
+
+  .hero{padding:38px 15px}
+
+  .hero h2{font-size:23px}
+
+  nav{
+    position:relative;
+    gap:5px;
+  }
+
+  nav a{
+    font-size:12px;
+    padding:9px 10px;
+  }
+
+  section{padding:28px 13px}
+
+  section h2{font-size:23px}
+
+  form{padding:18px}
+
 }
 </style>
 </head>
 
 <body>
 
-<header>
+<!-- HEADER -->
+
+<header id="home">
+
   <h1>K.S. Computer Center</h1>
+
   <p>सीखें कंप्यूटर, बनाएं अपना उज्ज्वल भविष्य</p>
+
   <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
+
 </header>
 
+<!-- MAIN NAVIGATION -->
+
 <nav>
+
   <a href="#home">Home</a>
+
   <a href="#courses">Courses</a>
+
   <a href="#admission">Admission</a>
+
+  <a href="#student-services">Student Services</a>
+
   <a href="#contact">Contact</a>
+
+  <a href="./student-login.html" class="login-link">Student Login</a>
+
+  <a href="./admin.html" class="admin-link">Admin Login</a>
+
 </nav>
 
-<div class="hero" id="home">
+<!-- HERO -->
+
+<div class="hero">
+
   <h2>आपका अपना कंप्यूटर प्रशिक्षण केंद्र</h2>
+
   <p>
     Basic Computer से लेकर Advanced Computer Courses तक सीखें।
     अनुभवी मार्गदर्शन के साथ कंप्यूटर शिक्षा और डिजिटल कौशल प्राप्त करें।
   </p>
+
   <a class="btn" href="#courses">कोर्स देखें</a>
+
   <a class="btn green" href="#admission">Online Admission</a>
+
+  <a class="btn purple" href="#student-services">Student Services</a>
+
 </div>
 
+<!-- COURSES -->
+
 <section id="courses">
+
   <h2>हमारे कंप्यूटर कोर्स</h2>
-  <p id="courseLoading" style="text-align:center">कोर्स लोड हो रहे हैं...</p>
+
+  <p id="courseLoading" style="text-align:center">
+    कोर्स लोड हो रहे हैं...
+  </p>
+
   <div class="courses" id="courseList"></div>
+
 </section>
 
+<!-- STUDENT SERVICES -->
+
+<section id="student-services">
+
+  <h2>Student Services — विद्यार्थी सेवाएँ</h2>
+
+  <p class="section-description">
+    विद्यार्थियों के लिए सभी जरूरी ऑनलाइन सेवाएँ एक ही जगह।
+  </p>
+
+  <div class="services">
+
+    <a class="service-card green-card"
+       href="./student-login.html">
+
+      <div class="service-icon">S</div>
+
+      <h3>Student Login</h3>
+
+      <p>अपना अकाउंट खोलें, फीस और सर्टिफिकेट की जानकारी देखें।</p>
+
+    </a>
+
+    <div class="service-card coming-card">
+
+      <div class="service-icon">M</div>
+
+      <h3>Mock Test</h3>
+
+      <p>ऑनलाइन टेस्ट देकर अपनी तैयारी जाँचें।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <div class="service-card coming-card">
+
+      <div class="service-icon">R</div>
+
+      <h3>Download Result</h3>
+
+      <p>ऑनलाइन परीक्षा का रिजल्ट देखें और डाउनलोड करें।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <div class="service-card coming-card">
+
+      <div class="service-icon">M</div>
+
+      <h3>Download Marksheet</h3>
+
+      <p>अपनी कोर्स मार्कशीट प्राप्त करें।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <div class="service-card orange-card coming-card">
+
+      <div class="service-icon">N</div>
+
+      <h3>Notice Board</h3>
+
+      <p>सेंटर के नए नोटिस, जरूरी सूचनाएँ और अपडेट।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <div class="service-card purple-card">
+
+      <div class="service-icon">C</div>
+
+      <h3>Certificate Verification</h3>
+
+      <p>अपने K.S. Computer Center सर्टिफिकेट को ऑनलाइन सत्यापित करें।</p>
+
+      <a class="btn purple"
+         href="./verify-certificate.html">Verify Certificate</a>
+
+    </div>
+
+    <div class="service-card coming-card">
+
+      <div class="service-icon">T</div>
+
+      <h3>Teacher Login</h3>
+
+      <p>शिक्षकों के लिए अलग लॉगिन और कार्यक्षेत्र।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <a class="service-card red-card"
+       href="./admin.html">
+
+      <div class="service-icon">A</div>
+
+      <h3>Admin Login</h3>
+
+      <p>Admin Panel में लॉगिन करके वेबसाइट और विद्यार्थियों को मैनेज करें।</p>
+
+    </a>
+
+    <div class="service-card teal-card coming-card">
+
+      <div class="service-icon">D</div>
+
+      <h3>Admission Status</h3>
+
+      <p>अपने ऑनलाइन एडमिशन आवेदन की स्थिति देखें।</p>
+
+      <span class="coming-label">Coming Soon</span>
+
+    </div>
+
+    <a class="service-card green-card"
+       href="https://wa.me/919889066680"
+       target="_blank"
+       rel="noopener">
+
+      <div class="service-icon">W</div>
+
+      <h3>WhatsApp Help</h3>
+
+      <p>कोर्स, फीस और एडमिशन के लिए WhatsApp पर संपर्क करें।</p>
+
+    </a>
+
+  </div>
+
+</section>
+
+<!-- ADMISSION -->
+
 <section id="admission">
+
   <h2>Online Admission Form</h2>
+
   <div class="notice">
-    <b>Payment:</b> अभी फीस केंद्र पर जमा करने का विकल्प उपलब्ध है।
+
+    <b>Payment:</b>
+    अभी फीस केंद्र पर जमा करने का विकल्प उपलब्ध है।
     कोर्स की फीस और अन्य जानकारी के लिए केंद्र से संपर्क करें।
+
   </div>
 
   <form id="admissionForm">
+
     <label for="studentName">विद्यार्थी का पूरा नाम</label>
-    <input id="studentName" type="text" placeholder="अपना नाम लिखें" required>
+
+    <input
+      id="studentName"
+      type="text"
+      placeholder="अपना नाम लिखें"
+      required>
 
     <label for="studentMobile">मोबाइल नंबर</label>
-    <input id="studentMobile" type="tel" inputmode="numeric"
-           pattern="[0-9]{10}" maxlength="10"
-           placeholder="10 अंकों का मोबाइल नंबर" required>
+
+    <input
+      id="studentMobile"
+      type="tel"
+      inputmode="numeric"
+      pattern="[0-9]{10}"
+      maxlength="10"
+      placeholder="10 अंकों का मोबाइल नंबर"
+      required>
 
     <label for="studentCourse">कोर्स चुनें</label>
+
     <select id="studentCourse" required>
       <option value="">कोर्स लोड हो रहे हैं...</option>
     </select>
 
     <label>Payment Option</label>
+
     <select id="paymentOption" required>
-      <option value="Pay at Center">Pay at Center — फीस केंद्र पर जमा करें</option>
+
+      <option value="Pay at Center">
+        Pay at Center — फीस केंद्र पर जमा करें
+      </option>
+
     </select>
 
-    <button class="btn green" type="submit">आवेदन भेजें</button>
+    <button class="btn green" type="submit">
+      आवेदन भेजें
+    </button>
+
     <p id="formMessage"></p>
+
   </form>
+
 </section>
+
+<!-- ABOUT CENTER -->
+
+<section id="about">
+
+  <h2>About K.S. Computer Center</h2>
+
+  <div class="about-box">
+
+    <h3>K.S. Computer Center</h3>
+
+    <p>
+      हमारा उद्देश्य विद्यार्थियों को कंप्यूटर शिक्षा,
+      डिजिटल कौशल और तकनीकी ज्ञान प्रदान करना है।
+      Basic Computer से Advanced Courses तक
+      सीखकर अपने भविष्य को बेहतर बनाएँ।
+    </p>
+
+    <a class="btn" href="#courses">हमारे कोर्स देखें</a>
+
+  </div>
+
+</section>
+
+<!-- CONTACT -->
 
 <section id="contact">
+
   <h2>Contact Us</h2>
-  <div class="course">
-    <p><b>K.S. Computer Center</b></p>
+
+  <div class="contact-box">
+
+    <h3>K.S. Computer Center</h3>
+
     <p>Jamuka Doraha, Katiya Road, Shahjahanpur</p>
-    <p>Mobile: 9889066680</p>
-    <a class="btn green" href="https://wa.me/919889066680" target="_blank">
+
+    <p><b>Mobile:</b> 9889066680</p>
+
+    <a class="btn green"
+       href="https://wa.me/919889066680"
+       target="_blank"
+       rel="noopener">
       WhatsApp पर संपर्क करें
     </a>
+
+    <a class="btn"
+       href="tel:9889066680">
+      Call Now
+    </a>
+
   </div>
+
 </section>
 
+<!-- FOOTER -->
+
 <footer>
-  <b>K.S. Computer Center</b><br>
-  Jamuka Doraha, Katiya Road, Shahjahanpur<br>
+
+  <b>K.S. Computer Center</b>
+
+  <br>
+
+  Jamuka Doraha, Katiya Road, Shahjahanpur
+
+  <br>
+
   Mobile: 9889066680
+
+  <div class="footer-links">
+
+    <a href="#home">Home</a>
+
+    <a href="#courses">Courses</a>
+
+    <a href="#admission">Admission</a>
+
+    <a href="#student-services">Student Services</a>
+
+    <a href="#contact">Contact</a>
+
+  </div>
+
+  <div class="footer-links">
+
+    <a href="./student-login.html">Student Login</a>
+
+    <a href="./verify-certificate.html">Certificate Verification</a>
+
+    <a href="./admin.html">Admin Login</a>
+
+  </div>
+
+  <p>© K.S. Computer Center. All Rights Reserved.</p>
+
 </footer>
 
+<!-- FIREBASE -->
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
+
 const firebaseConfig = {
-  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7igUA",
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7iguA",
   authDomain: "ks-computer-center.firebaseapp.com",
   projectId: "ks-computer-center",
   storageBucket: "ks-computer-center.firebasestorage.app",
@@ -133,26 +742,38 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 
 const courseList = document.getElementById("courseList");
+
 const courseSelect = document.getElementById("studentCourse");
+
 const courseLoading = document.getElementById("courseLoading");
 
-// Firestore से केवल Active Courses लोड करें
+// LOAD ACTIVE COURSES
+
 async function loadCourses() {
+
   courseList.innerHTML = "";
-  courseSelect.innerHTML = '<option value="">कोर्स चुनें</option>';
+
+  courseSelect.innerHTML =
+    '<option value="">कोर्स चुनें</option>';
 
   try {
+
     const snapshot = await db.collection("courses")
       .where("active", "==", true)
       .get();
 
     if (snapshot.empty) {
-      courseLoading.textContent = "अभी कोई Active Course उपलब्ध नहीं है।";
+
+      courseLoading.textContent =
+        "अभी कोई Active Course उपलब्ध नहीं है।";
+
       courseSelect.innerHTML =
         '<option value="">अभी कोई कोर्स उपलब्ध नहीं है</option>';
+
       return;
     }
 
@@ -161,104 +782,167 @@ async function loadCourses() {
     const courses = [];
 
     snapshot.forEach(doc => {
+
       const data = doc.data();
+
       if (data.name) {
+
         courses.push({
           name: data.name,
           fee: data.fee,
           duration: data.duration
         });
+
       }
+
     });
 
-    courses.sort((a, b) => a.name.localeCompare(b.name));
+    courses.sort((a,b) =>
+      a.name.localeCompare(b.name)
+    );
 
     courses.forEach(course => {
+
       const card = document.createElement("div");
+
       card.className = "course";
 
       const heading = document.createElement("h3");
+
       heading.textContent = course.name;
 
       const fee = document.createElement("p");
+
       fee.textContent = course.fee !== undefined
         ? "फीस: ₹" + course.fee
         : "फीस के लिए संपर्क करें";
 
       const duration = document.createElement("p");
+
       duration.textContent = course.duration
         ? "अवधि: " + course.duration
         : "अवधि के लिए संपर्क करें";
 
       const button = document.createElement("button");
+
       button.className = "btn";
+
       button.type = "button";
+
       button.textContent = "Apply Now";
 
       button.addEventListener("click", () => {
+
         selectCourse(course.name);
+
       });
 
-      card.append(heading, fee, duration, button);
+      card.append(heading,fee,duration,button);
+
       courseList.appendChild(card);
 
       const option = document.createElement("option");
+
       option.value = course.name;
+
       option.textContent = course.name;
+
       courseSelect.appendChild(option);
+
     });
 
-  } catch (error) {
-    console.error("Course loading error:", error);
+  } catch(error) {
+
+    console.error("Course loading error:",error);
+
     courseLoading.textContent =
       "कोर्स लोड नहीं हुए। कृपया कुछ देर बाद दोबारा कोशिश करें।";
+
     courseSelect.innerHTML =
       '<option value="">कोर्स लोड नहीं हो सके</option>';
+
   }
+
 }
 
 function selectCourse(course) {
+
   courseSelect.value = course;
+
   document.getElementById("admission").scrollIntoView({
-    behavior: "smooth"
+    behavior:"smooth"
   });
+
 }
 
 loadCourses();
 
-document.getElementById("admissionForm").addEventListener("submit", async function(e) {
+// ADMISSION FORM
+
+document.getElementById("admissionForm")
+.addEventListener("submit",async function(e) {
+
   e.preventDefault();
 
-  const name = document.getElementById("studentName").value.trim();
-  const mobile = document.getElementById("studentMobile").value.trim();
+  const name =
+    document.getElementById("studentName").value.trim();
+
+  const mobile =
+    document.getElementById("studentMobile").value.trim();
+
   const course = courseSelect.value;
-  const payment = document.getElementById("paymentOption").value;
-  const messageBox = document.getElementById("formMessage");
+
+  const payment =
+    document.getElementById("paymentOption").value;
+
+  const messageBox =
+    document.getElementById("formMessage");
 
   if (!name) {
-    messageBox.textContent = "कृपया विद्यार्थी का नाम लिखें।";
+
+    messageBox.textContent =
+      "कृपया विद्यार्थी का नाम लिखें।";
+
     return;
+
   }
 
   if (!/^[0-9]{10}$/.test(mobile)) {
-    messageBox.textContent = "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+
+    messageBox.textContent =
+      "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।";
+
     return;
+
   }
 
   if (!course) {
-    messageBox.textContent = "कृपया कोर्स चुनें।";
+
+    messageBox.textContent =
+      "कृपया कोर्स चुनें।";
+
     return;
+
   }
 
-  messageBox.textContent = "आवेदन सेव हो रहा है...";
+  messageBox.textContent =
+    "आवेदन सेव हो रहा है...";
 
   try {
+
     await db.collection("admissions").doc(mobile).set({
-      name: name,
-      mobile: mobile,
-      course: course,
-      payment: payment,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
+      name:name,
+
+      mobile:mobile,
+
+      course:course,
+
+      payment:payment,
+
+      createdAt:
+        firebase.firestore.FieldValue.serverTimestamp()
+
     });
 
     messageBox.textContent =
@@ -266,12 +950,17 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
 
     document.getElementById("admissionForm").reset();
 
-  } catch (error) {
+  } catch(error) {
+
     console.error(error);
+
     messageBox.textContent =
       "आवेदन सेव नहीं हो पाया। कृपया इंटरनेट और Firebase सेटिंग जाँचें।";
+
   }
+
 });
+
 </script>
 
 </body>

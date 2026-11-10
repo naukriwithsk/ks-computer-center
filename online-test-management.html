@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Online Test Management | K.S. Computer Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Test Management - K.S. Computer Center</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -11,120 +12,148 @@
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
-header{background:#142b50;color:white;padding:20px;text-align:center}
-header h2{margin:0 0 7px}
+body{margin:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#172033}
+header{background:#142b50;color:white;text-align:center;padding:20px}
 .container{max-width:950px;margin:22px auto;padding:0 14px}
-.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000c}
-h3{margin-top:0;color:#17365f}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
+h3{color:#17365f;margin-top:0}
 label{display:block;font-weight:bold;margin:13px 0 6px}
 input,textarea,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
-textarea{min-height:75px;resize:vertical}
-button{border:0;padding:12px 17px;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:12px}
+textarea{min-height:75px}
+button{border:0;padding:12px 16px;border-radius:7px;font-weight:bold;cursor:pointer;margin-top:12px}
 .primary{background:#174a87;color:white}
 .green{background:#16834a;color:white}
 .gray{background:#64748b;color:white}
 .red{background:#b42318;color:white}
-button:disabled{opacity:.5;cursor:not-allowed}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.status{padding:11px;border-radius:7px;background:#eff6ff;margin:12px 0}
+.status{padding:11px;background:#eff6ff;border-radius:7px;margin:12px 0}
 .test-item{border:1px solid #dbe3ed;padding:14px;border-radius:9px;margin:12px 0}
-.test-item h4{margin:0 0 7px}
 .small{font-size:13px;color:#64748b}
 .hidden{display:none}
-#message{font-weight:bold;margin-top:12px}
 @media(max-width:600px){.row{grid-template-columns:1fr}.card{padding:15px}}
 </style>
 </head>
 
 <body>
-
 <header>
-  <h2>K.S. Computer Center</h2>
-  <div>Admin Online Test Management</div>
+<h2>K.S. Computer Center</h2>
+<div>Admin Online Test Management</div>
 </header>
 
 <div class="container">
 
-  <div class="card">
-    <h3>Admin Login स्थिति</h3>
-    <div id="loginStatus" class="status">Login जाँचा जा रहा है...</div>
-    <button class="gray" onclick="logout()">Logout</button>
-  </div>
+<div class="card">
+<h3>Admin Login स्थिति</h3>
+<div id="loginStatus" class="status">जाँच हो रही है...</div>
+<button class="gray" onclick="logout()">Logout</button>
+</div>
 
-  <div id="mainPanel" class="hidden">
+<div id="mainPanel" class="hidden">
 
-    <div class="card">
-      <h3>1. नया टेस्ट बनाएँ</h3>
+<div class="card">
+<h3>1. नया टेस्ट बनाएँ</h3>
 
-      <label>टेस्ट का नाम</label>
-      <input id="testTitle" placeholder="जैसे: Basic Computer Test 1">
+<label>टेस्ट का नाम</label>
+<input id="testTitle" placeholder="जैसे Basic Computer Test 1">
 
-      <div class="row">
-        <div>
-          <label>टेस्ट का समय (मिनट)</label>
-          <input id="duration" type="number" min="1" max="300" value="30">
-        </div>
-        <div>
-          <label>कुल प्रश्न</label>
-          <input id="totalQuestions" type="number" min="1" max="200" value="20">
-        </div>
-      </div>
+<div class="row">
+<div>
+<label>समय (मिनट)</label>
+<input id="duration" type="number" min="1" max="300" value="30">
+</div>
+<div>
+<label>कुल प्रश्न</label>
+<input id="totalQuestions" type="number" min="1" max="200" value="1">
+</div>
+</div>
 
-      <label>टेस्ट के निर्देश</label>
-      <textarea id="instructions" placeholder="टेस्ट शुरू करने से पहले विद्यार्थियों के लिए निर्देश लिखें"></textarea>
+<label>टेस्ट के निर्देश</label>
+<textarea id="instructions" placeholder="विद्यार्थियों के लिए निर्देश"></textarea>
 
-      <button class="primary" id="createTestBtn" onclick="createTest()">टेस्ट बनाएँ</button>
-      <div id="createMessage"></div>
-    </div>
+<button class="primary" id="createBtn" onclick="createTest()">टेस्ट बनाएँ</button>
+<div id="createMessage"></div>
+</div>
 
-    <div class="card">
-      <h3>2. प्रश्न और उत्तर जोड़ें</h3>
+<div class="card">
+<h3>2. पुराने टेस्ट को Edit करें</h3>
 
-      <label>टेस्ट चुनें</label>
-      <select id="testSelect" onchange="selectTest()">
-        <option value="">पहले टेस्ट चुनें</option>
-      </select>
+<label>टेस्ट चुनें</label>
+<select id="editTestSelect" onchange="loadSelectedTest()">
+<option value="">टेस्ट चुनें</option>
+</select>
 
-      <div id="questionArea" class="hidden">
-        <div class="status" id="selectedTestInfo"></div>
+<div id="editArea" class="hidden">
+<div class="status" id="editInfo"></div>
 
-        <label>प्रश्न लिखें</label>
-        <textarea id="questionText" placeholder="अपना प्रश्न यहाँ लिखें"></textarea>
+<label>टेस्ट का नाम</label>
+<input id="editTitle">
 
-        <label>विकल्प A</label>
-        <input id="option0" placeholder="पहला विकल्प">
+<div class="row">
+<div>
+<label>समय (मिनट)</label>
+<input id="editDuration" type="number" min="1" max="300">
+</div>
+<div>
+<label>कुल प्रश्न</label>
+<input id="editTotal" type="number" min="1" max="200">
+</div>
+</div>
 
-        <label>विकल्प B</label>
-        <input id="option1" placeholder="दूसरा विकल्प">
+<label>निर्देश</label>
+<textarea id="editInstructions"></textarea>
 
-        <label>विकल्प C</label>
-        <input id="option2" placeholder="तीसरा विकल्प">
+<button class="green" onclick="saveTestChanges()">बदलाव सेव करें</button>
+<div id="editMessage"></div>
+</div>
+</div>
 
-        <label>विकल्प D</label>
-        <input id="option3" placeholder="चौथा विकल्प">
+<div class="card">
+<h3>3. प्रश्न और सही उत्तर जोड़ें</h3>
 
-        <label>सही उत्तर चुनें</label>
-        <select id="correctAnswer">
-          <option value="">सही उत्तर चुनें</option>
-          <option value="0">विकल्प A</option>
-          <option value="1">विकल्प B</option>
-          <option value="2">विकल्प C</option>
-          <option value="3">विकल्प D</option>
-        </select>
+<label>टेस्ट चुनें</label>
+<select id="questionTestSelect" onchange="loadQuestionTest()">
+<option value="">टेस्ट चुनें</option>
+</select>
 
-        <button class="green" id="addQuestionBtn" onclick="addQuestion()">प्रश्न सेव करें</button>
-        <div id="questionMessage"></div>
-      </div>
-    </div>
+<div id="questionArea" class="hidden">
+<div class="status" id="questionInfo"></div>
 
-    <div class="card">
-      <h3>3. बनाए गए टेस्ट</h3>
-      <button class="gray" onclick="loadTests()">सूची Refresh करें</button>
-      <div id="testList">टेस्ट लोड हो रहे हैं...</div>
-    </div>
+<label>प्रश्न</label>
+<textarea id="questionText" placeholder="प्रश्न लिखें"></textarea>
 
-  </div>
+<label>विकल्प A</label>
+<input id="option0" placeholder="विकल्प A">
+
+<label>विकल्प B</label>
+<input id="option1" placeholder="विकल्प B">
+
+<label>विकल्प C</label>
+<input id="option2" placeholder="विकल्प C">
+
+<label>विकल्प D</label>
+<input id="option3" placeholder="विकल्प D">
+
+<label>सही उत्तर</label>
+<select id="correctAnswer">
+<option value="">सही उत्तर चुनें</option>
+<option value="0">विकल्प A</option>
+<option value="1">विकल्प B</option>
+<option value="2">विकल्प C</option>
+<option value="3">विकल्प D</option>
+</select>
+
+<button class="green" id="addQuestionBtn" onclick="addQuestion()">प्रश्न सेव करें</button>
+<div id="questionMessage"></div>
+</div>
+</div>
+
+<div class="card">
+<h3>4. सभी टेस्ट</h3>
+<button class="gray" onclick="loadTests()">Refresh</button>
+<div id="testList">लोड हो रहा है...</div>
+</div>
+
+</div>
 </div>
 
 <script>
@@ -143,14 +172,14 @@ const db = firebase.firestore();
 
 const ADMIN_EMAIL = "naukriwithsk@gmail.com";
 
-let currentTestId = "";
-let currentTest = null;
+let selectedEditTest = null;
+let selectedQuestionTest = null;
 
-auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(user => {
   const status = document.getElementById("loginStatus");
 
   if (!user) {
-    status.textContent = "Admin login नहीं है। पहले Admin Login करें।";
+    status.textContent = "Admin Login नहीं है। पहले Admin Login करें।";
     document.getElementById("mainPanel").classList.add("hidden");
     return;
   }
@@ -172,19 +201,19 @@ async function createTest() {
   const total = Number(document.getElementById("totalQuestions").value);
   const instructions = document.getElementById("instructions").value.trim();
   const msg = document.getElementById("createMessage");
-  const btn = document.getElementById("createTestBtn");
 
   if (!title) return msg.textContent = "टेस्ट का नाम लिखें।";
   if (!Number.isInteger(duration) || duration < 1 || duration > 300)
-    return msg.textContent = "समय 1 से 300 मिनट के बीच रखें।";
+    return msg.textContent = "समय 1 से 300 मिनट रखें।";
   if (!Number.isInteger(total) || total < 1 || total > 200)
-    return msg.textContent = "प्रश्नों की संख्या 1 से 200 के बीच रखें।";
+    return msg.textContent = "प्रश्न संख्या 1 से 200 रखें।";
 
+  const btn = document.getElementById("createBtn");
   btn.disabled = true;
-  msg.textContent = "टेस्ट सेव हो रहा है...";
+  msg.textContent = "सेव हो रहा है...";
 
   try {
-    const ref = await db.collection("tests").add({
+    await db.collection("tests").add({
       title,
       durationMinutes: duration,
       totalQuestions: total,
@@ -195,17 +224,13 @@ async function createTest() {
       createdBy: auth.currentUser.uid
     });
 
-    msg.textContent = "टेस्ट बन गया! अब नीचे से इसमें प्रश्न जोड़ें।";
+    msg.textContent = "टेस्ट सफलतापूर्वक बन गया।";
     document.getElementById("testTitle").value = "";
     document.getElementById("instructions").value = "";
-    document.getElementById("testSelect").value = ref.id;
-
     await loadTests();
-    await selectTest();
 
-  } catch (error) {
-    console.error(error);
-    msg.textContent = "टेस्ट सेव नहीं हुआ: " + error.message;
+  } catch (e) {
+    msg.textContent = "Error: " + e.message;
   }
 
   btn.disabled = false;
@@ -213,29 +238,31 @@ async function createTest() {
 
 async function loadTests() {
   const list = document.getElementById("testList");
-  const select = document.getElementById("testSelect");
+  const editSelect = document.getElementById("editTestSelect");
+  const questionSelect = document.getElementById("questionTestSelect");
 
   list.textContent = "लोड हो रहा है...";
-  select.innerHTML = '<option value="">टेस्ट चुनें</option>';
+  editSelect.innerHTML = '<option value="">टेस्ट चुनें</option>';
+  questionSelect.innerHTML = '<option value="">टेस्ट चुनें</option>';
 
   try {
-    const snapshot = await db.collection("tests")
-      .orderBy("createdAt", "desc").get();
-
+    const snap = await db.collection("tests").orderBy("createdAt", "desc").get();
     list.innerHTML = "";
 
-    if (snapshot.empty) {
-      list.textContent = "अभी कोई टेस्ट नहीं बनाया गया है।";
+    if (snap.empty) {
+      list.textContent = "अभी कोई टेस्ट नहीं है।";
       return;
     }
 
-    snapshot.forEach(doc => {
+    snap.forEach(doc => {
       const t = doc.data();
 
-      const option = document.createElement("option");
-      option.value = doc.id;
-      option.textContent = t.title || "बिना नाम का टेस्ट";
-      select.appendChild(option);
+      [editSelect, questionSelect].forEach(select => {
+        const opt = document.createElement("option");
+        opt.value = doc.id;
+        opt.textContent = t.title || "बिना नाम का टेस्ट";
+        select.appendChild(opt);
+      });
 
       const item = document.createElement("div");
       item.className = "test-item";
@@ -246,36 +273,29 @@ async function loadTests() {
       const details = document.createElement("div");
       details.className = "small";
       details.textContent =
-        "समय: " + (t.durationMinutes || 0) + " मिनट | " +
-        "प्रश्न: " + (t.questionCount || 0) + "/" +
-        (t.totalQuestions || 0) + " | स्थिति: " +
-        (t.active ? "Active" : "Inactive");
+        "समय: " + t.durationMinutes + " मिनट | प्रश्न: " +
+        (t.questionCount || 0) + "/" + t.totalQuestions +
+        " | स्थिति: " + (t.active ? "Active" : "Inactive");
 
-      const button = document.createElement("button");
-      button.className = t.active ? "red" : "green";
-      button.textContent = t.active ? "टेस्ट बंद करें" : "टेस्ट Active करें";
-      button.onclick = () => toggleTest(doc.id, t);
+      const btn = document.createElement("button");
+      btn.className = t.active ? "red" : "green";
+      btn.textContent = t.active ? "टेस्ट बंद करें" : "टेस्ट Active करें";
+      btn.onclick = () => toggleTest(doc.id, t);
 
-      item.appendChild(heading);
-      item.appendChild(details);
-      item.appendChild(button);
+      item.append(heading, details, btn);
       list.appendChild(item);
     });
 
-    if (currentTestId) select.value = currentTestId;
-
-  } catch (error) {
-    console.error(error);
-    list.textContent = "टेस्ट लोड नहीं हुए: " + error.message;
+  } catch (e) {
+    list.textContent = "टेस्ट लोड नहीं हुए: " + e.message;
   }
 }
 
-async function selectTest() {
-  const id = document.getElementById("testSelect").value;
-  const area = document.getElementById("questionArea");
+async function loadSelectedTest() {
+  const id = document.getElementById("editTestSelect").value;
+  const area = document.getElementById("editArea");
 
-  currentTestId = id;
-  currentTest = null;
+  selectedEditTest = null;
 
   if (!id) {
     area.classList.add("hidden");
@@ -284,23 +304,90 @@ async function selectTest() {
 
   try {
     const doc = await db.collection("tests").doc(id).get();
+    if (!doc.exists) return;
 
-    if (!doc.exists) {
-      area.classList.add("hidden");
-      return;
-    }
+    selectedEditTest = {id, ...doc.data()};
 
-    currentTest = doc.data();
-    document.getElementById("selectedTestInfo").textContent =
-      currentTest.title + " — " +
-      (currentTest.questionCount || 0) + "/" +
-      currentTest.totalQuestions + " प्रश्न जोड़े गए हैं।";
+    document.getElementById("editTitle").value = selectedEditTest.title || "";
+    document.getElementById("editDuration").value = selectedEditTest.durationMinutes || 30;
+    document.getElementById("editTotal").value = selectedEditTest.totalQuestions || 1;
+    document.getElementById("editInstructions").value = selectedEditTest.instructions || "";
 
+    document.getElementById("editInfo").textContent =
+      "अभी " + (selectedEditTest.questionCount || 0) +
+      " प्रश्न सेव हैं। कुल प्रश्नों की संख्या इससे कम नहीं रख सकते।";
+
+    document.getElementById("editMessage").textContent = "";
     area.classList.remove("hidden");
-    document.getElementById("questionMessage").textContent = "";
 
-  } catch (error) {
-    alert("टेस्ट की जानकारी नहीं मिली: " + error.message);
+  } catch (e) {
+    alert("टेस्ट नहीं खुला: " + e.message);
+  }
+}
+
+async function saveTestChanges() {
+  if (!selectedEditTest) return;
+
+  const title = document.getElementById("editTitle").value.trim();
+  const duration = Number(document.getElementById("editDuration").value);
+  const total = Number(document.getElementById("editTotal").value);
+  const instructions = document.getElementById("editInstructions").value.trim();
+  const msg = document.getElementById("editMessage");
+
+  if (!title) return msg.textContent = "टेस्ट का नाम लिखें।";
+  if (!Number.isInteger(duration) || duration < 1 || duration > 300)
+    return msg.textContent = "समय 1 से 300 मिनट रखें।";
+  if (!Number.isInteger(total) || total < 1 || total > 200)
+    return msg.textContent = "कुल प्रश्न 1 से 200 रखें।";
+
+  if (total < (selectedEditTest.questionCount || 0)) {
+    return msg.textContent = "कुल प्रश्न सेव किए गए प्रश्नों से कम नहीं हो सकते।";
+  }
+
+  try {
+    await db.collection("tests").doc(selectedEditTest.id).update({
+      title,
+      durationMinutes: duration,
+      totalQuestions: total,
+      instructions
+    });
+
+    msg.textContent = "टेस्ट की जानकारी अपडेट हो गई।";
+    await loadTests();
+    await loadSelectedTest();
+
+  } catch (e) {
+    msg.textContent = "अपडेट नहीं हुआ: " + e.message;
+  }
+}
+
+async function loadQuestionTest() {
+  const id = document.getElementById("questionTestSelect").value;
+  const area = document.getElementById("questionArea");
+
+  selectedQuestionTest = null;
+
+  if (!id) {
+    area.classList.add("hidden");
+    return;
+  }
+
+  try {
+    const doc = await db.collection("tests").doc(id).get();
+    if (!doc.exists) return;
+
+    selectedQuestionTest = {id, ...doc.data()};
+
+    document.getElementById("questionInfo").textContent =
+      selectedQuestionTest.title + " — " +
+      (selectedQuestionTest.questionCount || 0) + "/" +
+      selectedQuestionTest.totalQuestions + " प्रश्न सेव हैं।";
+
+    document.getElementById("questionMessage").textContent = "";
+    area.classList.remove("hidden");
+
+  } catch (e) {
+    alert("टेस्ट नहीं खुला: " + e.message);
   }
 }
 
@@ -308,10 +395,7 @@ async function addQuestion() {
   const msg = document.getElementById("questionMessage");
   const btn = document.getElementById("addQuestionBtn");
 
-  if (!currentTestId || !currentTest) {
-    msg.textContent = "पहले टेस्ट चुनें।";
-    return;
-  }
+  if (!selectedQuestionTest) return msg.textContent = "पहले टेस्ट चुनें।";
 
   const question = document.getElementById("questionText").value.trim();
   const options = [0,1,2,3].map(i =>
@@ -323,56 +407,49 @@ async function addQuestion() {
   if (options.some(x => !x)) return msg.textContent = "चारों विकल्प भरें।";
   if (correct === "") return msg.textContent = "सही उत्तर चुनें।";
 
-  if ((currentTest.questionCount || 0) >= currentTest.totalQuestions) {
-    msg.textContent = "इस टेस्ट के सभी प्रश्न जुड़ चुके हैं।";
-    return;
-  }
+  if ((selectedQuestionTest.questionCount || 0) >= selectedQuestionTest.totalQuestions)
+    return msg.textContent = "इस टेस्ट के सभी प्रश्न जुड़ चुके हैं।";
 
   btn.disabled = true;
   msg.textContent = "प्रश्न सेव हो रहा है...";
 
   try {
+    const testId = selectedQuestionTest.id;
     const questionRef = db.collection("testQuestions")
-      .doc(currentTestId).collection("questions").doc();
+      .doc(testId).collection("questions").doc();
 
     const answerRef = db.collection("testAnswerKeys")
-      .doc(currentTestId).collection("answers").doc(questionRef.id);
+      .doc(testId).collection("answers").doc(questionRef.id);
 
     const batch = db.batch();
 
-    // विद्यार्थी को केवल प्रश्न और विकल्प मिलेंगे।
     batch.set(questionRef, {
       question,
       options,
-      order: (currentTest.questionCount || 0) + 1
+      order: (selectedQuestionTest.questionCount || 0) + 1
     });
 
-    // सही उत्तर अलग सुरक्षित collection में रहेगा।
     batch.set(answerRef, {
       correctOption: Number(correct)
     });
 
-    batch.update(db.collection("tests").doc(currentTestId), {
+    batch.update(db.collection("tests").doc(testId), {
       questionCount: firebase.firestore.FieldValue.increment(1)
     });
 
     await batch.commit();
 
-    currentTest.questionCount = (currentTest.questionCount || 0) + 1;
-
     msg.textContent = "प्रश्न सफलतापूर्वक सेव हो गया।";
+
     document.getElementById("questionText").value = "";
-    [0,1,2,3].forEach(i => {
-      document.getElementById("option" + i).value = "";
-    });
+    [0,1,2,3].forEach(i => document.getElementById("option" + i).value = "");
     document.getElementById("correctAnswer").value = "";
 
-    await selectTest();
+    await loadQuestionTest();
     await loadTests();
 
-  } catch (error) {
-    console.error(error);
-    msg.textContent = "प्रश्न सेव नहीं हुआ: " + error.message;
+  } catch (e) {
+    msg.textContent = "प्रश्न सेव नहीं हुआ: " + e.message;
   }
 
   btn.disabled = false;
@@ -384,8 +461,7 @@ async function toggleTest(id, test) {
     return;
   }
 
-  const action = test.active ? "बंद" : "Active";
-  if (!confirm("क्या आप यह टेस्ट " + action + " करना चाहते हैं?")) return;
+  if (!confirm(test.active ? "टेस्ट बंद करें?" : "टेस्ट Active करें?")) return;
 
   try {
     await db.collection("tests").doc(id).update({
@@ -393,8 +469,8 @@ async function toggleTest(id, test) {
     });
     await loadTests();
     alert("टेस्ट की स्थिति अपडेट हो गई।");
-  } catch (error) {
-    alert("अपडेट नहीं हुआ: " + error.message);
+  } catch (e) {
+    alert("अपडेट नहीं हुआ: " + e.message);
   }
 }
 
@@ -403,6 +479,5 @@ async function logout() {
   window.location.href = "./admin.html";
 }
 </script>
-
 </body>
 </html>

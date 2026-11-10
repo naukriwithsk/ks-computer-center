@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Test | K.S. Computer Center</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f9;color:#172033;font-family:Arial,sans-serif}
+header{background:#142b50;color:white;text-align:center;padding:20px}
+.container{max-width:850px;margin:22px auto;padding:0 14px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
+h2,h3{margin-top:0}
+label{display:block;padding:12px;border:1px solid #dbe3ed;border-radius:8px;margin:9px 0;cursor:pointer}
+label:hover{background:#eff6ff}
+input[type=radio]{margin-right:9px}
+select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}
+button{border:0;padding:12px 18px;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer;margin:6px 4px 6px 0}
+.primary{background:#174a87;color:white}
+.green{background:#16834a;color:white}
+.gray{background:#64748b;color:white}
+.red{background:#b42318;color:white}
+.status{padding:12px;background:#eff6ff;border-radius:8px;margin:12px 0}
+.timer{font-size:22px;font-weight:bold;color:#b42318}
+.question{font-size:18px;font-weight:bold;line-height:1.6}
+.small{color:#64748b;font-size:13px}
+.hidden{display:none}
+.nav{display:flex;justify-content:space-between;flex-wrap:wrap;margin-top:18px}
+button:disabled{opacity:.5;cursor:not-allowed}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>K.S. Computer Center</h2>
+<div>Online Examination</div>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>विद्यार्थी Login</h3>
+<div id="loginStatus" class="status">Login जाँचा जा रहा है...</div>
+<button class="gray" onclick="logout()">Logout</button>
+</div>
+
+<div id="testSelection" class="card hidden">
+<h3>उपलब्ध Online Tests</h3>
+<p>नीचे से अपना टेस्ट चुनें।</p>
+<select id="testSelect">
+<option value="">टेस्ट लोड हो रहे हैं...</option>
+</select>
+<div id="testDetails" class="status hidden"></div>
+<button class="primary" id="startBtn" onclick="startTest()" disabled>टेस्ट शुरू करें</button>
+<div id="selectionMessage"></div>
+</div>
+
+<div id="examArea" class="card hidden">
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<div>
+<strong id="examTitle">Test</strong>
+<div class="small" id="questionNumber"></div>
+</div>
+<div class="timer" id="timer">30:00</div>
+</div>
+
+<hr>
+
+<div id="questionText" class="question"></div>
+<div id="optionsArea"></div>
+
+<div class="nav">
+<button class="gray" id="previousBtn" onclick="previousQuestion()">← Previous</button>
+<button class="primary" id="nextBtn" onclick="nextQuestion()">Next →</button>
+</div>
+
+<div class="status" id="progressText"></div>
+<button class="green" style="width:100%" id="submitBtn" onclick="submitTest(false)">TEST SUBMIT करें</button>
+<div class="small">समय पूरा होने पर टेस्ट अपने-आप Submit करने का प्रयास करेगा।</div>
+</div>
+
+<div id="finishedArea" class="card hidden">
+<h3>टेस्ट जमा हो गया</h3>
+<div class="status" id="finishedMessage"></div>
+<p>आपके उत्तर Admin के पास जाँच के लिए भेज दिए गए हैं। रिजल्ट प्रकाशित होने पर आप Student Login से देख सकेंगे।</p>
+</div>
+
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let student = null;
+let tests = [];
+let selectedTest = null;
+let questions = [];
+let answers = {};
+let currentIndex = 0;
+let timerInterval = null;
+let endTime = 0;
+let submitting = false;
+
+auth.onAuthStateChanged(async user => {
+  const status = document.getElementById("loginStatus");
+
+  if (!user) {
+    status.textContent = "आप Login नहीं हैं। पहले Student Login करें।";
+    return;
+  }
+
+  try {
+    const accountDoc = await db.collection("studentAccounts").doc(user.uid).get();
+
+    if (!accountDoc.exists) {
+      status.textContent = "आपका Student Account रिकॉर्ड नहीं मिला। Admin से संपर्क करें।";
+      return;
+    }
+
+    const account = accountDoc.data();
+    const mobile = account.mobile;
+
+    if (!mobile) {
+      status.textContent = "Student Account में मोबाइल नंबर नहीं मिला।";
+      return;
+    }
+
+    const admissionDoc = await db.collection("admissions").doc(mobile).get();
+
+    student = {
+      uid: user.uid,
+      mobile: mobile,
+      name: admissionDoc.exists ? admissionDoc.data().name : "Student"
+    };
+
+    status.textContent = "Student Login सफल: " + student.name;
+    document.getElementById("testSelection").classList.remove("hidden");
+
+    await loadTests();
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "जानकारी लोड नहीं हुई: " + error.message;
+  }
+});
+
+async function loadTests() {
+  const select = document.getElementById("testSelect");
+  const message = document.getElementById("selectionMessage");
+
+  select.innerHTML = '<option value="">टेस्ट चुनें</option>';
+
+  try {
+    const snap = await db.collection("tests")
+      .where("active", "==", true).get();
+
+    tests = [];
+
+    for (const doc of snap.docs) {
+      const data = doc.data();
+
+      const attemptId = doc.id + "_" + student.uid;
+      const previousAttempt = await db.collection("testSubmissions")
+        .doc(attemptId).get();
+
+      if (previousAttempt.exists) continue;
+
+      tests.push({id: doc.id, ...data});
+
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = data.title || "Online Test";
+      select.appendChild(option);
+    }
+
+    if (!tests.length) {
+      message.textContent = "अभी कोई नया Active टेस्ट उपलब्ध नहीं है। या आपने उपलब्ध टेस्ट पहले ही दे दिया है।";
+    } else {
+      message.textContent = "अपना टेस्ट चुनें।";
+    }
+
+    select.onchange = showTestDetails;
+
+  } catch (error) {
+    console.error(error);
+    message.textContent = "टेस्ट लोड नहीं हुए: " + error.message;
+  }
+}
+
+function showTestDetails() {
+  const id = document.getElementById("testSelect").value;
+  selectedTest = tests.find(t => t.id === id) || null;
+
+  const details = document.getElementById("testDetails");
+  const button = document.getElementById("startBtn");
+
+  if (!selectedTest) {
+    details.classList.add("hidden");
+    button.disabled = true;
+    return;
+  }
+
+  details.textContent =
+    "टेस्ट: " + selectedTest.title +
+    " | समय: " + selectedTest.durationMinutes + " मिनट" +
+    " | कुल प्रश्न: " + selectedTest.totalQuestions;
+
+  details.classList.remove("hidden");
+  button.disabled = false;
+}
+
+async function startTest() {
+  if (!selectedTest) return;
+
+  if (!confirm("क्या आप टेस्ट शुरू करना चाहते हैं? टेस्ट शुरू होते ही समय चलना शुरू हो जाएगा।")) return;
+
+  const button = document.getElementById("startBtn");
+  button.disabled = true;
+
+  try {
+    const attemptId = selectedTest.id + "_" + student.uid;
+
+    const previous = await db.collection("testSubmissions").doc(attemptId).get();
+
+    if (previous.exists) {
+      alert("आप यह टेस्ट पहले ही दे चुके हैं।");
+      await loadTests();
+      button.disabled = false;
+      return;
+    }
+
+    const snap = await db.collection("testQuestions")
+      .doc(selectedTest.id)
+      .collection("questions")
+      .orderBy("order").get();
+
+    questions = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    if (!questions.length) {
+      alert("इस टेस्ट में अभी प्रश्न उपलब्ध नहीं हैं।");
+      button.disabled = false;
+      return;
+    }
+
+    if (questions.length !== selectedTest.totalQuestions) {
+      alert("टेस्ट में प्रश्नों की संख्या पूरी नहीं है। Admin से संपर्क करें।");
+      button.disabled = false;
+      return;
+    }
+
+    answers = {};
+    currentIndex = 0;
+
+    endTime = Date.now() + selectedTest.durationMinutes * 60 * 1000;
+
+    document.getElementById("examTitle").textContent = selectedTest.title;
+    document.getElementById("testSelection").classList.add("hidden");
+    document.getElementById("examArea").classList.remove("hidden");
+
+    showQuestion();
+    startTimer();
+
+  } catch (error) {
+    console.error(error);
+    alert("टेस्ट शुरू नहीं हुआ: " + error.message);
+    button.disabled = false;
+  }
+}
+
+function showQuestion() {
+  const q = questions[currentIndex];
+
+  document.getElementById("questionNumber").textContent =
+    "प्रश्न " + (currentIndex + 1) + " / " + questions.length;
+
+  document.getElementById("questionText").textContent =
+    (currentIndex + 1) + ". " + q.question;
+
+  const area = document.getElementById("optionsArea");
+  area.innerHTML = "";
+
+  q.options.forEach((option, index) => {
+    const label = document.createElement("label");
+    const radio = document.createElement("input");
+
+    radio.type = "radio";
+    radio.name = "answer";
+    radio.value = index;
+    radio.checked = answers[q.id] === index;
+
+    radio.onchange = () => {
+      answers[q.id] = index;
+      updateProgress();
+    };
+
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(
+      " " + String.fromCharCode(65 + index) + ". " + option
+    ));
+
+    area.appendChild(label);
+  });
+
+  document.getElementById("previousBtn").disabled = currentIndex === 0;
+  document.getElementById("nextBtn").disabled = currentIndex === questions.length - 1;
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const count = Object.keys(answers).length;
+  document.getElementById("progressText").textContent =
+    "उत्तर दिए गए: " + count + " / " + questions.length;
+}
+
+function nextQuestion() {
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    showQuestion();
+  }
+}
+
+function previousQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    showQuestion();
+  }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    const remaining = Math.max(0, endTime - Date.now());
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+
+    document.getElementById("timer").textContent =
+      String(minutes).padStart(2, "0") + ":" +
+      String(seconds).padStart(2, "0");
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      submitTest(true);
+    }
+  }, 500);
+}
+
+async function submitTest(autoSubmit) {
+  if (submitting) return;
+
+  const answered = Object.keys(answers).length;
+
+  if (!autoSubmit) {
+    const ok = confirm(
+      "क्या आप टेस्ट Submit करना चाहते हैं?\nआपने " +
+      answered + " में से " + questions.length +
+      " प्रश्नों के उत्तर दिए हैं।"
+    );
+    if (!ok) return;
+  }
+
+  submitting = true;
+  clearInterval(timerInterval);
+
+  const button = document.getElementById("submitBtn");
+  button.disabled = true;
+  button.textContent = "Submit हो रहा है...";
+
+  try {
+    const attemptId = selectedTest.id + "_" + student.uid;
+    const submissionRef = db.collection("testSubmissions").doc(attemptId);
+
+    const previous = await submissionRef.get();
+
+    if (previous.exists) {
+      throw new Error("इस टेस्ट का उत्तर पहले ही जमा हो चुका है।");
+    }
+
+    const responseList = questions.map(q => ({
+      questionId: q.id,
+      selectedOption: answers[q.id] === undefined ? null : answers[q.id]
+    }));
+
+    await submissionRef.set({
+      uid: student.uid,
+      mobile: student.mobile,
+      studentName: student.name,
+      testId: selectedTest.id,
+      testTitle: selectedTest.title,
+      answers: responseList,
+      totalQuestions: questions.length,
+      answeredQuestions: answered,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "pending"
+    });
+
+    document.getElementById("examArea").classList.add("hidden");
+    document.getElementById("finishedArea").classList.remove("hidden");
+
+    document.getElementById("finishedMessage").textContent =
+      autoSubmit
+        ? "समय पूरा होने पर आपका टेस्ट Submit हो गया।"
+        : "आपका टेस्ट सफलतापूर्वक Submit हो गया।";
+
+  } catch (error) {
+    console.error(error);
+    alert("टेस्ट Submit नहीं हुआ: " + error.message);
+    button.disabled = false;
+    button.textContent = "दोबारा Submit करें";
+    submitting = false;
+  }
+}
+
+async function logout() {
+  clearInterval(timerInterval);
+  await auth.signOut();
+  window.location.href = "./student-login.html";
+}
+</script>
+
+</body>
+</html>

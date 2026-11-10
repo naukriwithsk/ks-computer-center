@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Test Management | K.S. Computer Center</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#142b50;color:white;padding:20px;text-align:center}
+header h2{margin:0 0 7px}
+.container{max-width:950px;margin:22px auto;padding:0 14px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000c}
+h3{margin-top:0;color:#17365f}
+label{display:block;font-weight:bold;margin:13px 0 6px}
+input,textarea,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
+textarea{min-height:75px;resize:vertical}
+button{border:0;padding:12px 17px;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:12px}
+.primary{background:#174a87;color:white}
+.green{background:#16834a;color:white}
+.gray{background:#64748b;color:white}
+.red{background:#b42318;color:white}
+button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.status{padding:11px;border-radius:7px;background:#eff6ff;margin:12px 0}
+.test-item{border:1px solid #dbe3ed;padding:14px;border-radius:9px;margin:12px 0}
+.test-item h4{margin:0 0 7px}
+.small{font-size:13px;color:#64748b}
+.hidden{display:none}
+#message{font-weight:bold;margin-top:12px}
+@media(max-width:600px){.row{grid-template-columns:1fr}.card{padding:15px}}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>K.S. Computer Center</h2>
+  <div>Admin Online Test Management</div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Admin Login स्थिति</h3>
+    <div id="loginStatus" class="status">Login जाँचा जा रहा है...</div>
+    <button class="gray" onclick="logout()">Logout</button>
+  </div>
+
+  <div id="mainPanel" class="hidden">
+
+    <div class="card">
+      <h3>1. नया टेस्ट बनाएँ</h3>
+
+      <label>टेस्ट का नाम</label>
+      <input id="testTitle" placeholder="जैसे: Basic Computer Test 1">
+
+      <div class="row">
+        <div>
+          <label>टेस्ट का समय (मिनट)</label>
+          <input id="duration" type="number" min="1" max="300" value="30">
+        </div>
+        <div>
+          <label>कुल प्रश्न</label>
+          <input id="totalQuestions" type="number" min="1" max="200" value="20">
+        </div>
+      </div>
+
+      <label>टेस्ट के निर्देश</label>
+      <textarea id="instructions" placeholder="टेस्ट शुरू करने से पहले विद्यार्थियों के लिए निर्देश लिखें"></textarea>
+
+      <button class="primary" id="createTestBtn" onclick="createTest()">टेस्ट बनाएँ</button>
+      <div id="createMessage"></div>
+    </div>
+
+    <div class="card">
+      <h3>2. प्रश्न और उत्तर जोड़ें</h3>
+
+      <label>टेस्ट चुनें</label>
+      <select id="testSelect" onchange="selectTest()">
+        <option value="">पहले टेस्ट चुनें</option>
+      </select>
+
+      <div id="questionArea" class="hidden">
+        <div class="status" id="selectedTestInfo"></div>
+
+        <label>प्रश्न लिखें</label>
+        <textarea id="questionText" placeholder="अपना प्रश्न यहाँ लिखें"></textarea>
+
+        <label>विकल्प A</label>
+        <input id="option0" placeholder="पहला विकल्प">
+
+        <label>विकल्प B</label>
+        <input id="option1" placeholder="दूसरा विकल्प">
+
+        <label>विकल्प C</label>
+        <input id="option2" placeholder="तीसरा विकल्प">
+
+        <label>विकल्प D</label>
+        <input id="option3" placeholder="चौथा विकल्प">
+
+        <label>सही उत्तर चुनें</label>
+        <select id="correctAnswer">
+          <option value="">सही उत्तर चुनें</option>
+          <option value="0">विकल्प A</option>
+          <option value="1">विकल्प B</option>
+          <option value="2">विकल्प C</option>
+          <option value="3">विकल्प D</option>
+        </select>
+
+        <button class="green" id="addQuestionBtn" onclick="addQuestion()">प्रश्न सेव करें</button>
+        <div id="questionMessage"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3. बनाए गए टेस्ट</h3>
+      <button class="gray" onclick="loadTests()">सूची Refresh करें</button>
+      <div id="testList">टेस्ट लोड हो रहे हैं...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
+  authDomain: "ks-computer-center.firebaseapp.com",
+  projectId: "ks-computer-center",
+  storageBucket: "ks-computer-center.firebasestorage.app",
+  messagingSenderId: "261490969527",
+  appId: "1:261490969527:web:4fc4dfb5b96bc6a89b7632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const ADMIN_EMAIL = "naukriwithsk@gmail.com";
+
+let currentTestId = "";
+let currentTest = null;
+
+auth.onAuthStateChanged(async user => {
+  const status = document.getElementById("loginStatus");
+
+  if (!user) {
+    status.textContent = "Admin login नहीं है। पहले Admin Login करें।";
+    document.getElementById("mainPanel").classList.add("hidden");
+    return;
+  }
+
+  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    status.textContent = "यह पेज केवल Admin के लिए है।";
+    document.getElementById("mainPanel").classList.add("hidden");
+    return;
+  }
+
+  status.textContent = "Admin Login सफल: " + user.email;
+  document.getElementById("mainPanel").classList.remove("hidden");
+  loadTests();
+});
+
+async function createTest() {
+  const title = document.getElementById("testTitle").value.trim();
+  const duration = Number(document.getElementById("duration").value);
+  const total = Number(document.getElementById("totalQuestions").value);
+  const instructions = document.getElementById("instructions").value.trim();
+  const msg = document.getElementById("createMessage");
+  const btn = document.getElementById("createTestBtn");
+
+  if (!title) return msg.textContent = "टेस्ट का नाम लिखें।";
+  if (!Number.isInteger(duration) || duration < 1 || duration > 300)
+    return msg.textContent = "समय 1 से 300 मिनट के बीच रखें।";
+  if (!Number.isInteger(total) || total < 1 || total > 200)
+    return msg.textContent = "प्रश्नों की संख्या 1 से 200 के बीच रखें।";
+
+  btn.disabled = true;
+  msg.textContent = "टेस्ट सेव हो रहा है...";
+
+  try {
+    const ref = await db.collection("tests").add({
+      title,
+      durationMinutes: duration,
+      totalQuestions: total,
+      instructions,
+      active: false,
+      questionCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: auth.currentUser.uid
+    });
+
+    msg.textContent = "टेस्ट बन गया! अब नीचे से इसमें प्रश्न जोड़ें।";
+    document.getElementById("testTitle").value = "";
+    document.getElementById("instructions").value = "";
+    document.getElementById("testSelect").value = ref.id;
+
+    await loadTests();
+    await selectTest();
+
+  } catch (error) {
+    console.error(error);
+    msg.textContent = "टेस्ट सेव नहीं हुआ: " + error.message;
+  }
+
+  btn.disabled = false;
+}
+
+async function loadTests() {
+  const list = document.getElementById("testList");
+  const select = document.getElementById("testSelect");
+
+  list.textContent = "लोड हो रहा है...";
+  select.innerHTML = '<option value="">टेस्ट चुनें</option>';
+
+  try {
+    const snapshot = await db.collection("tests")
+      .orderBy("createdAt", "desc").get();
+
+    list.innerHTML = "";
+
+    if (snapshot.empty) {
+      list.textContent = "अभी कोई टेस्ट नहीं बनाया गया है।";
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const t = doc.data();
+
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = t.title || "बिना नाम का टेस्ट";
+      select.appendChild(option);
+
+      const item = document.createElement("div");
+      item.className = "test-item";
+
+      const heading = document.createElement("h4");
+      heading.textContent = t.title || "बिना नाम का टेस्ट";
+
+      const details = document.createElement("div");
+      details.className = "small";
+      details.textContent =
+        "समय: " + (t.durationMinutes || 0) + " मिनट | " +
+        "प्रश्न: " + (t.questionCount || 0) + "/" +
+        (t.totalQuestions || 0) + " | स्थिति: " +
+        (t.active ? "Active" : "Inactive");
+
+      const button = document.createElement("button");
+      button.className = t.active ? "red" : "green";
+      button.textContent = t.active ? "टेस्ट बंद करें" : "टेस्ट Active करें";
+      button.onclick = () => toggleTest(doc.id, t);
+
+      item.appendChild(heading);
+      item.appendChild(details);
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+
+    if (currentTestId) select.value = currentTestId;
+
+  } catch (error) {
+    console.error(error);
+    list.textContent = "टेस्ट लोड नहीं हुए: " + error.message;
+  }
+}
+
+async function selectTest() {
+  const id = document.getElementById("testSelect").value;
+  const area = document.getElementById("questionArea");
+
+  currentTestId = id;
+  currentTest = null;
+
+  if (!id) {
+    area.classList.add("hidden");
+    return;
+  }
+
+  try {
+    const doc = await db.collection("tests").doc(id).get();
+
+    if (!doc.exists) {
+      area.classList.add("hidden");
+      return;
+    }
+
+    currentTest = doc.data();
+    document.getElementById("selectedTestInfo").textContent =
+      currentTest.title + " — " +
+      (currentTest.questionCount || 0) + "/" +
+      currentTest.totalQuestions + " प्रश्न जोड़े गए हैं।";
+
+    area.classList.remove("hidden");
+    document.getElementById("questionMessage").textContent = "";
+
+  } catch (error) {
+    alert("टेस्ट की जानकारी नहीं मिली: " + error.message);
+  }
+}
+
+async function addQuestion() {
+  const msg = document.getElementById("questionMessage");
+  const btn = document.getElementById("addQuestionBtn");
+
+  if (!currentTestId || !currentTest) {
+    msg.textContent = "पहले टेस्ट चुनें।";
+    return;
+  }
+
+  const question = document.getElementById("questionText").value.trim();
+  const options = [0,1,2,3].map(i =>
+    document.getElementById("option" + i).value.trim()
+  );
+  const correct = document.getElementById("correctAnswer").value;
+
+  if (!question) return msg.textContent = "प्रश्न लिखें।";
+  if (options.some(x => !x)) return msg.textContent = "चारों विकल्प भरें।";
+  if (correct === "") return msg.textContent = "सही उत्तर चुनें।";
+
+  if ((currentTest.questionCount || 0) >= currentTest.totalQuestions) {
+    msg.textContent = "इस टेस्ट के सभी प्रश्न जुड़ चुके हैं।";
+    return;
+  }
+
+  btn.disabled = true;
+  msg.textContent = "प्रश्न सेव हो रहा है...";
+
+  try {
+    const questionRef = db.collection("testQuestions")
+      .doc(currentTestId).collection("questions").doc();
+
+    const answerRef = db.collection("testAnswerKeys")
+      .doc(currentTestId).collection("answers").doc(questionRef.id);
+
+    const batch = db.batch();
+
+    // विद्यार्थी को केवल प्रश्न और विकल्प मिलेंगे।
+    batch.set(questionRef, {
+      question,
+      options,
+      order: (currentTest.questionCount || 0) + 1
+    });
+
+    // सही उत्तर अलग सुरक्षित collection में रहेगा।
+    batch.set(answerRef, {
+      correctOption: Number(correct)
+    });
+
+    batch.update(db.collection("tests").doc(currentTestId), {
+      questionCount: firebase.firestore.FieldValue.increment(1)
+    });
+
+    await batch.commit();
+
+    currentTest.questionCount = (currentTest.questionCount || 0) + 1;
+
+    msg.textContent = "प्रश्न सफलतापूर्वक सेव हो गया।";
+    document.getElementById("questionText").value = "";
+    [0,1,2,3].forEach(i => {
+      document.getElementById("option" + i).value = "";
+    });
+    document.getElementById("correctAnswer").value = "";
+
+    await selectTest();
+    await loadTests();
+
+  } catch (error) {
+    console.error(error);
+    msg.textContent = "प्रश्न सेव नहीं हुआ: " + error.message;
+  }
+
+  btn.disabled = false;
+}
+
+async function toggleTest(id, test) {
+  if (!test.active && (test.questionCount || 0) !== test.totalQuestions) {
+    alert("टेस्ट Active करने से पहले सभी प्रश्न जोड़ें।");
+    return;
+  }
+
+  const action = test.active ? "बंद" : "Active";
+  if (!confirm("क्या आप यह टेस्ट " + action + " करना चाहते हैं?")) return;
+
+  try {
+    await db.collection("tests").doc(id).update({
+      active: !test.active
+    });
+    await loadTests();
+    alert("टेस्ट की स्थिति अपडेट हो गई।");
+  } catch (error) {
+    alert("अपडेट नहीं हुआ: " + error.message);
+  }
+}
+
+async function logout() {
+  await auth.signOut();
+  window.location.href = "./admin.html";
+}
+</script>
+
+</body>
+</html>

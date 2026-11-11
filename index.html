@@ -575,11 +575,8 @@ footer a:hover{text-decoration:underline}
   <h2>Online Admission Form</h2>
 
   <div class="notice">
-
-    <b>Payment:</b>
-    अभी फीस केंद्र पर जमा करने का विकल्प उपलब्ध है।
-    कोर्स की फीस और अन्य जानकारी के लिए केंद्र से संपर्क करें।
-
+    <b>Payment:</b> आप UPI से ऑनलाइन भुगतान कर सकते हैं या फीस केंद्र पर जमा कर सकते हैं।
+    Online UPI भुगतान Admin द्वारा जाँचने के बाद ही Confirm होगा।
   </div>
 
   <form id="admissionForm">
@@ -609,15 +606,22 @@ footer a:hover{text-decoration:underline}
       <option value="">कोर्स लोड हो रहे हैं...</option>
     </select>
 
-    <label>Payment Option</label>
+    <label for="paymentOption">Payment Option चुनें</label>
 
     <select id="paymentOption" required>
-
-      <option value="Pay at Center">
-        Pay at Center — फीस केंद्र पर जमा करें
-      </option>
-
+      <option value="Pay at Center">Pay at Center — फीस केंद्र पर जमा करें</option>
+      <option value="Online UPI">Online Payment — UPI QR Code</option>
     </select>
+
+    <div id="upiPaymentBox" style="display:none; margin-top:18px; padding:18px; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; text-align:center;">
+      <h3>UPI से ऑनलाइन भुगतान करें</h3>
+      <p>नीचे दिए गए QR Code को PhonePe, Google Pay या Paytm से स्कैन करें।</p>
+      <img src="./upi-qr.jpg" alt="K.S. Computer Center UPI QR Code" style="width:230px; max-width:100%; background:white; padding:8px; border-radius:10px;">
+      <p><b>भुगतान करने के बाद Transaction ID / UTR भरें।</b></p>
+      <label for="utrNumber">Transaction ID / UTR Number</label>
+      <input id="utrNumber" type="text" minlength="8" maxlength="30" placeholder="अपना UTR नंबर लिखें" autocomplete="off">
+      <p style="font-size:13px;color:#92400e;">आपका भुगतान Admin द्वारा जाँचने के बाद ही Confirm होगा।</p>
+    </div>
 
     <button class="btn green" type="submit">
       आवेदन भेजें
@@ -733,7 +737,7 @@ footer a:hover{text-decoration:underline}
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVq0r6C7iguA",
+  apiKey: "AIzaSyD4QuKWPD7ENTrtOch1bAsRVqOr6C7iguA",
   authDomain: "ks-computer-center.firebaseapp.com",
   projectId: "ks-computer-center",
   storageBucket: "ks-computer-center.firebasestorage.app",
@@ -877,6 +881,18 @@ function selectCourse(course) {
 
 loadCourses();
 
+// UPI PAYMENT BOX SHOW / HIDE
+const paymentOptionSelect = document.getElementById("paymentOption");
+const upiPaymentBox = document.getElementById("upiPaymentBox");
+const utrInput = document.getElementById("utrNumber");
+
+paymentOptionSelect.addEventListener("change", function() {
+  const isOnlineUPI = this.value === "Online UPI";
+  upiPaymentBox.style.display = isOnlineUPI ? "block" : "none";
+  utrInput.required = isOnlineUPI;
+  if (!isOnlineUPI) utrInput.value = "";
+});
+
 // ADMISSION FORM
 
 document.getElementById("admissionForm")
@@ -894,6 +910,8 @@ document.getElementById("admissionForm")
 
   const payment =
     document.getElementById("paymentOption").value;
+
+  const utr = utrInput.value.trim();
 
   const messageBox =
     document.getElementById("formMessage");
@@ -925,28 +943,34 @@ document.getElementById("admissionForm")
 
   }
 
+  if (payment === "Online UPI" && !/^[A-Za-z0-9]{8,30}$/.test(utr)) {
+    messageBox.textContent = "कृपया सही Transaction ID / UTR नंबर भरें।";
+    return;
+  }
+
   messageBox.textContent =
     "आवेदन सेव हो रहा है...";
 
   try {
 
-    await db.collection("admissions").doc(mobile).set({
+    const admissionData = {
+      name: name,
+      mobile: mobile,
+      course: course,
+      payment: payment,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-      name:name,
+    if (payment === "Online UPI") {
+      admissionData.utr = utr;
+    }
 
-      mobile:mobile,
+    // एक मोबाइल नंबर से दोबारा आवेदन रोकने के लिए नया रिकॉर्ड ही बनाएँ
+    await db.collection("admissions").doc(mobile).set(admissionData);
 
-      course:course,
-
-      payment:payment,
-
-      createdAt:
-        firebase.firestore.FieldValue.serverTimestamp()
-
-    });
-
-    messageBox.textContent =
-      "आवेदन सफलतापूर्वक सेव हो गया! धन्यवाद।";
+    messageBox.textContent = payment === "Online UPI"
+      ? "आवेदन सेव हो गया। भुगतान की जाँच Admin करेगा; पुष्टि होने तक भुगतान Pending रहेगा।"
+      : "आवेदन सफलतापूर्वक सेव हो गया! फीस केंद्र पर जमा करें।";
 
     document.getElementById("admissionForm").reset();
 

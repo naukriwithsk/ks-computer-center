@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -6,28 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Payment Management - K.S. Computer Center</title>
 <style>
+*{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#f2f5f9;margin:0;padding:15px;color:#222}
-.container{max-width:950px;margin:auto}
+.container{max-width:1050px;margin:auto}
 h2{text-align:center;color:#173b70}
 .card{background:white;padding:18px;margin:15px 0;border-radius:12px;box-shadow:0 2px 10px #0001}
 label{display:block;margin-top:12px;font-weight:bold}
-input,select{width:100%;padding:12px;margin-top:6px;box-sizing:border-box;border:1px solid #ccc;border-radius:7px}
-button{padding:12px 18px;background:#1769aa;color:white;border:0;border-radius:7px;cursor:pointer;margin-top:12px}
+input,select{width:100%;padding:12px;margin-top:6px;border:1px solid #ccc;border-radius:7px}
+button{padding:11px 16px;background:#1769aa;color:white;border:0;border-radius:7px;cursor:pointer;margin-top:12px}
 button:hover{background:#104c80}
+button:disabled{opacity:.5;cursor:not-allowed}
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .stat{background:#eef5ff;padding:15px;border-radius:9px;text-align:center}
 .stat strong{display:block;font-size:21px;margin-top:8px;color:#174c86}
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
 .table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin-top:12px;min-width:650px}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+th{background:#eef5ff}
 .status{font-weight:bold;color:#a05b00}
+.paid{color:green;font-weight:bold}
+.pending{color:#a05b00;font-weight:bold}
+.verify-box{background:#f7faff;border:1px solid #d5e4f5;padding:12px;border-radius:8px;min-width:220px}
+.verify-box input{margin-top:5px}
+.small{font-size:13px;color:#555}
 #message{font-weight:bold;margin-top:12px}
+.notice{background:#fff7df;padding:12px;border-radius:8px;color:#704d00}
 </style>
 </head>
 <body>
 <div class="container">
+
 <h2>K.S. Computer Center</h2>
 <h3 style="text-align:center">Payment Management / फीस प्रबंधन</h3>
+
+<div class="card">
+<h3>UPI Payment Verification / UPI भुगतान जाँच</h3>
+<p class="notice">
+नीचे Online UPI से आवेदन करने वाले विद्यार्थियों की सूची है।
+पहले अपने PhonePe, Google Pay, Paytm या बैंक ऐप में UTR जाँचें।
+भुगतान मिलने की पुष्टि के बाद ही Verify करें।
+</p>
+<button onclick="loadUPIPending()">सूची Refresh करें</button>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>विद्यार्थी</th>
+<th>कोर्स</th>
+<th>UTR नंबर</th>
+<th>स्थिति</th>
+<th>भुगतान जाँचें</th>
+</tr>
+</thead>
+<tbody id="upiPendingList">
+<tr><td colspan="5">सूची लोड हो रही है...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
 
 <div class="card">
 <h3>विद्यार्थी चुनें</h3>
@@ -83,14 +118,17 @@ th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
 <th>तारीख</th>
 <th>राशि</th>
 <th>तरीका</th>
+<th>UTR / Transaction ID</th>
+<th>स्थिति</th>
 </tr>
 </thead>
 <tbody id="history">
-<tr><td colspan="3">विद्यार्थी चुनें</td></tr>
+<tr><td colspan="5">विद्यार्थी चुनें</td></tr>
 </tbody>
 </table>
 </div>
 </div>
+
 </div>
 </div>
 
@@ -109,14 +147,26 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 let selectedMobile = "";
 let selectedAdmission = null;
 let paymentRecords = [];
+let admissionsCache = [];
 
-const money = value => "₹" + Number(value || 0).toLocaleString("en-IN");
+const money = value =>
+  "₹" + Number(value || 0).toLocaleString("en-IN");
+
+function todayDate() {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60000)
+    .toISOString().slice(0,10);
+}
+
+document.getElementById("paymentDate").value = todayDate();
 
 auth.onAuthStateChanged(async user => {
   if (!user || user.email !== "naukriwithsk@gmail.com") {
@@ -124,7 +174,9 @@ auth.onAuthStateChanged(async user => {
     location.href = "admin.html";
     return;
   }
-  loadStudents();
+
+  await loadStudents();
+  await loadUPIPending();
 });
 
 async function loadStudents() {
@@ -138,7 +190,8 @@ async function loadStudents() {
       const s = doc.data();
       const option = document.createElement("option");
       option.value = doc.id;
-      option.textContent = `${s.name || "नाम नहीं"} - ${s.mobile || doc.id} (${s.course || ""})`;
+      option.textContent =
+        `${s.name || "नाम नहीं"} - ${s.mobile || doc.id} (${s.course || ""})`;
       select.appendChild(option);
     });
   } catch (error) {
@@ -146,25 +199,33 @@ async function loadStudents() {
   }
 }
 
-document.getElementById("studentSelect").addEventListener("change", async function() {
+document.getElementById("studentSelect")
+.addEventListener("change", async function() {
   selectedMobile = this.value;
   document.getElementById("paymentArea").style.display = "none";
 
   if (!selectedMobile) return;
 
   try {
-    const doc = await db.collection("admissions").doc(selectedMobile).get();
+    const doc = await db.collection("admissions")
+      .doc(selectedMobile).get();
+
     if (!doc.exists) return;
 
     selectedAdmission = doc.data();
+
     document.getElementById("studentInfo").textContent =
       "नाम: " + (selectedAdmission.name || "") +
       " | मोबाइल: " + (selectedAdmission.mobile || selectedMobile) +
       " | कोर्स: " + (selectedAdmission.course || "");
 
-    document.getElementById("totalFee").value = selectedAdmission.feeTotal || "";
+    document.getElementById("totalFee").value =
+      selectedAdmission.feeTotal || "";
+
     document.getElementById("paymentArea").style.display = "block";
+
     await loadPayments();
+
   } catch (error) {
     alert("विद्यार्थी का विवरण नहीं खुला: " + error.message);
   }
@@ -174,18 +235,22 @@ async function saveTotalFee() {
   if (!selectedMobile) return;
 
   const fee = Number(document.getElementById("totalFee").value);
+
   if (!Number.isFinite(fee) || fee < 0) {
     alert("सही कुल फीस लिखें।");
     return;
   }
 
   try {
-    await db.collection("admissions").doc(selectedMobile).update({
-      feeTotal: fee
-    });
+    await db.collection("admissions")
+      .doc(selectedMobile)
+      .update({feeTotal: fee});
+
     selectedAdmission.feeTotal = fee;
+
     alert("कुल फीस सेव हो गई।");
     updateSummary();
+
   } catch (error) {
     alert("फीस सेव नहीं हुई: " + error.message);
   }
@@ -193,43 +258,79 @@ async function saveTotalFee() {
 
 async function loadPayments() {
   const history = document.getElementById("history");
-  history.innerHTML = "<tr><td colspan='3'>लोड हो रहा है...</td></tr>";
+  history.innerHTML =
+    "<tr><td colspan='5'>लोड हो रहा है...</td></tr>";
 
   try {
     const snapshot = await db.collection("admissions")
       .doc(selectedMobile)
       .collection("payments")
-      .orderBy("createdAt", "asc")
       .get();
 
     paymentRecords = [];
-    snapshot.forEach(doc => paymentRecords.push(doc.data()));
+
+    snapshot.forEach(doc => {
+      paymentRecords.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    paymentRecords.sort((a,b) =>
+      String(a.paymentDate || "").localeCompare(
+        String(b.paymentDate || "")
+      )
+    );
 
     history.innerHTML = "";
 
     if (paymentRecords.length === 0) {
-      history.innerHTML = "<tr><td colspan='3'>अभी कोई फीस जमा नहीं हुई।</td></tr>";
+      history.innerHTML =
+        "<tr><td colspan='5'>अभी कोई फीस जमा नहीं हुई।</td></tr>";
     } else {
       paymentRecords.forEach(p => {
         const tr = document.createElement("tr");
-        [p.paymentDate || "-", money(p.amount), p.method || "-"].forEach(value => {
+
+        const values = [
+          p.paymentDate || "-",
+          money(p.amount),
+          p.method || "-",
+          p.utr || "-",
+          p.status || "Verified"
+        ];
+
+        values.forEach((value, index) => {
           const td = document.createElement("td");
           td.textContent = value;
+
+          if (index === 4) {
+            td.className = "paid";
+          }
+
           tr.appendChild(td);
         });
+
         history.appendChild(tr);
       });
     }
+
     updateSummary();
+
   } catch (error) {
-    history.innerHTML = "<tr><td colspan='3'>इतिहास लोड नहीं हुआ।</td></tr>";
+    history.innerHTML =
+      "<tr><td colspan='5'>इतिहास लोड नहीं हुआ।</td></tr>";
+
     alert("Payment history error: " + error.message);
   }
 }
 
 function updateSummary() {
   const total = Number(selectedAdmission?.feeTotal || 0);
-  const paid = paymentRecords.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+  const paid = paymentRecords.reduce(
+    (sum,p) => sum + Number(p.amount || 0), 0
+  );
+
   const balance = total - paid;
 
   document.getElementById("totalDisplay").textContent = money(total);
@@ -237,6 +338,7 @@ function updateSummary() {
   document.getElementById("balanceDisplay").textContent = money(balance);
 
   let status = "Pending";
+
   if (total > 0 && balance <= 0) status = "Paid";
   else if (paid > 0) status = "Partially Paid";
 
@@ -248,7 +350,11 @@ async function addPayment() {
 
   const amount = Number(document.getElementById("amount").value);
   const total = Number(selectedAdmission?.feeTotal || 0);
-  const paid = paymentRecords.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+  const paid = paymentRecords.reduce(
+    (sum,p) => sum + Number(p.amount || 0), 0
+  );
+
   const balance = total - paid;
   const method = document.getElementById("method").value;
   const paymentDate = document.getElementById("paymentDate").value;
@@ -257,14 +363,17 @@ async function addPayment() {
     alert("सही जमा राशि लिखें।");
     return;
   }
+
   if (total <= 0) {
     alert("पहले कुल फीस सेव करें।");
     return;
   }
+
   if (amount > balance) {
     alert("जमा राशि बाकी फीस से ज्यादा नहीं हो सकती। बाकी फीस: " + money(balance));
     return;
   }
+
   if (!paymentDate) {
     alert("भुगतान की तारीख चुनें।");
     return;
@@ -278,14 +387,218 @@ async function addPayment() {
         amount: amount,
         method: method,
         paymentDate: paymentDate,
+        status: "Verified",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
     document.getElementById("amount").value = "";
-    document.getElementById("message").textContent = "फीस सफलतापूर्वक जमा हो गई।";
+    document.getElementById("message").textContent =
+      "फीस सफलतापूर्वक जमा हो गई।";
+
     await loadPayments();
+
   } catch (error) {
     alert("फीस जमा नहीं हुई: " + error.message);
+  }
+}
+
+/* UPI Pending Applications */
+
+async function loadUPIPending() {
+  const tbody = document.getElementById("upiPendingList");
+
+  tbody.innerHTML =
+    "<tr><td colspan='5'>UPI आवेदन लोड हो रहे हैं...</td></tr>";
+
+  try {
+    const snapshot = await db.collection("admissions").get();
+
+    admissionsCache = [];
+
+    snapshot.forEach(doc => {
+      admissionsCache.push({
+        mobile: doc.id,
+        ...doc.data()
+      });
+    });
+
+    const upiStudents = admissionsCache.filter(s =>
+      s.payment === "Online UPI" && s.utr
+    );
+
+    if (upiStudents.length === 0) {
+      tbody.innerHTML =
+        "<tr><td colspan='5'>कोई Online UPI आवेदन नहीं मिला।</td></tr>";
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    for (const student of upiStudents) {
+      const paymentsSnapshot = await db.collection("admissions")
+        .doc(student.mobile)
+        .collection("payments")
+        .get();
+
+      let verified = false;
+
+      paymentsSnapshot.forEach(paymentDoc => {
+        const p = paymentDoc.data();
+
+        if (
+          String(p.utr || "").toLowerCase() ===
+          String(student.utr || "").toLowerCase()
+        ) {
+          verified = true;
+        }
+      });
+
+      const tr = document.createElement("tr");
+
+      const studentTd = document.createElement("td");
+      studentTd.textContent =
+        (student.name || "-") + " / " + student.mobile;
+
+      const courseTd = document.createElement("td");
+      courseTd.textContent = student.course || "-";
+
+      const utrTd = document.createElement("td");
+      utrTd.textContent = student.utr;
+
+      const statusTd = document.createElement("td");
+      statusTd.textContent = verified ? "Paid / Verified" : "Pending";
+      statusTd.className = verified ? "paid" : "pending";
+
+      const actionTd = document.createElement("td");
+
+      if (verified) {
+        actionTd.textContent = "भुगतान सत्यापित";
+      } else {
+        const box = document.createElement("div");
+        box.className = "verify-box";
+
+        const amountLabel = document.createElement("label");
+        amountLabel.textContent = "पुष्टि की गई राशि (₹)";
+
+        const amountInput = document.createElement("input");
+        amountInput.type = "number";
+        amountInput.min = "1";
+        amountInput.placeholder = "वास्तविक प्राप्त राशि";
+
+        const dateLabel = document.createElement("label");
+        dateLabel.textContent = "भुगतान की तारीख";
+
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.value = todayDate();
+
+        const verifyButton = document.createElement("button");
+        verifyButton.textContent = "Verify & Mark Paid";
+
+        verifyButton.onclick = () => verifyUPIPayment(
+          student.mobile,
+          student.utr,
+          amountInput.value,
+          dateInput.value,
+          verifyButton
+        );
+
+        box.appendChild(amountLabel);
+        box.appendChild(amountInput);
+        box.appendChild(dateLabel);
+        box.appendChild(dateInput);
+        box.appendChild(verifyButton);
+
+        actionTd.appendChild(box);
+      }
+
+      tr.appendChild(studentTd);
+      tr.appendChild(courseTd);
+      tr.appendChild(utrTd);
+      tr.appendChild(statusTd);
+      tr.appendChild(actionTd);
+
+      tbody.appendChild(tr);
+    }
+
+  } catch (error) {
+    tbody.innerHTML =
+      "<tr><td colspan='5'>UPI सूची लोड नहीं हुई।</td></tr>";
+
+    alert("UPI सूची Error: " + error.message);
+  }
+}
+
+/* Admin manually verifies payment */
+
+async function verifyUPIPayment(
+  mobile, utr, amountValue, paymentDate, button
+) {
+  const amount = Number(amountValue);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("सही प्राप्त राशि लिखें।");
+    return;
+  }
+
+  if (!paymentDate) {
+    alert("भुगतान की तारीख चुनें।");
+    return;
+  }
+
+  const confirmed = confirm(
+    "क्या आपने अपने UPI ऐप या बैंक में यह UTR जाँच लिया है?\n\n" +
+    "UTR: " + utr + "\n" +
+    "राशि: " + money(amount) + "\n\n" +
+    "केवल वास्तविक भुगतान मिलने पर OK करें।"
+  );
+
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = "सेव हो रहा है...";
+
+  try {
+    const paymentCollection = db.collection("admissions")
+      .doc(mobile)
+      .collection("payments");
+
+    const existing = await paymentCollection
+      .where("utr", "==", utr)
+      .get();
+
+    if (!existing.empty) {
+      alert("यह UTR पहले ही फीस रिकॉर्ड में दर्ज है।");
+      await loadUPIPending();
+      return;
+    }
+
+    await paymentCollection.add({
+      amount: amount,
+      method: "Online UPI",
+      utr: utr,
+      paymentDate: paymentDate,
+      status: "Verified",
+      verifiedBy: auth.currentUser.email,
+      verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert(
+      "UPI भुगतान सफलतापूर्वक Verified हो गया।\n" +
+      "राशि विद्यार्थी की जमा फीस में जोड़ दी गई है।"
+    );
+
+    await loadUPIPending();
+
+    if (selectedMobile === mobile) {
+      await loadPayments();
+    }
+
+  } catch (error) {
+    alert("UPI Verify नहीं हुआ: " + error.message);
+    button.disabled = false;
+    button.textContent = "Verify & Mark Paid";
   }
 }
 </script>

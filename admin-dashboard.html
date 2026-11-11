@@ -312,6 +312,22 @@ footer{
   font-size:25px;
   font-weight:bold;
 }
+
+.notice-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.notice-form input,.notice-form textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+.notice-form textarea{grid-column:1/-1;min-height:100px;resize:vertical}
+.notice-actions{display:flex;gap:8px;flex-wrap:wrap}
+.notice-actions button{background:#2563eb;color:white}
+.notice-actions .cancel{background:#64748b}
+.notice-actions .delete{background:#dc2626}
+.notice-list{display:grid;gap:12px;margin-top:18px}
+.notice-item{border:1px solid #e2e8f0;border-radius:12px;padding:15px;background:#f8fafc}
+.notice-item h3{margin:0 0 8px;color:#1e40af}
+.notice-item p{white-space:pre-wrap;line-height:1.5;margin:8px 0}
+.notice-meta{font-size:12px;color:#64748b;margin-top:8px}
+.notice-form .full{grid-column:1/-1}
+@media(max-width:600px){.notice-form{grid-template-columns:1fr}.notice-form textarea,.notice-form .full{grid-column:auto}}
+
 </style>
 </head>
 
@@ -417,6 +433,25 @@ footer{
 
     </div>
 
+  </section>
+
+
+  <!-- NOTICE BOARD MANAGEMENT -->
+  <section class="panel" id="noticeManagement">
+    <h2>📢 Notice Board — सूचना प्रबंधन</h2>
+    <p>यहाँ से वेबसाइट के लिए नई सूचना प्रकाशित करें, पुरानी सूचना बदलें या हटाएँ।</p>
+    <form id="noticeForm" class="notice-form">
+      <input id="noticeTitle" type="text" maxlength="120" placeholder="सूचना का शीर्षक" required>
+      <input id="noticeLink" type="url" placeholder="बाहरी लिंक (वैकल्पिक, https://...)">
+      <textarea id="noticeContent" maxlength="3000" placeholder="सूचना का पूरा विवरण लिखें..." required></textarea>
+      <div class="full"><label><input id="noticeActive" type="checkbox" checked> वेबसाइट पर प्रकाशित करें</label></div>
+      <div class="notice-actions full">
+        <button type="submit" id="noticeSaveButton">सूचना प्रकाशित करें</button>
+        <button type="button" class="cancel" id="noticeCancelButton" style="display:none">रद्द करें</button>
+      </div>
+    </form>
+    <p id="noticeMessage">सूचनाएँ लोड हो रही हैं...</p>
+    <div id="noticeList" class="notice-list"></div>
   </section>
 
   <!-- DASHBOARD STATISTICS -->
@@ -565,8 +600,108 @@ auth.onAuthStateChanged(function(user) {
   }
 
   loadAdmissions();
+  loadNotices();
 
 });
+
+
+// NOTICE BOARD MANAGEMENT
+let editingNoticeId = null;
+
+function resetNoticeForm() {
+  editingNoticeId = null;
+  document.getElementById("noticeForm").reset();
+  document.getElementById("noticeActive").checked = true;
+  document.getElementById("noticeSaveButton").textContent = "सूचना प्रकाशित करें";
+  document.getElementById("noticeCancelButton").style.display = "none";
+}
+
+async function loadNotices() {
+  const msg = document.getElementById("noticeMessage");
+  const list = document.getElementById("noticeList");
+  msg.textContent = "सूचनाएँ लोड हो रही हैं...";
+  list.innerHTML = "";
+  try {
+    const snap = await db.collection("notices").orderBy("createdAt", "desc").get();
+    if (snap.empty) { msg.textContent = "अभी कोई सूचना नहीं है।"; return; }
+    msg.textContent = "कुल " + snap.size + " सूचनाएँ";
+    snap.forEach(function(doc) {
+      const d = doc.data();
+      const card = document.createElement("div");
+      card.className = "notice-item";
+      const h = document.createElement("h3"); h.textContent = d.title || "बिना शीर्षक";
+      const p = document.createElement("p"); p.textContent = d.content || "";
+      const meta = document.createElement("div");
+      meta.className = "notice-meta";
+      meta.textContent = d.active ? "प्रकाशित" : "ड्राफ्ट / छिपी हुई";
+      card.append(h,p,meta);
+      if (d.link) {
+        const a = document.createElement("a");
+        a.href = d.link; a.textContent = "लिंक खोलें";
+        a.target = "_blank"; a.rel = "noopener noreferrer";
+        card.appendChild(a);
+      }
+      const actions = document.createElement("div");
+      actions.className = "notice-actions"; actions.style.marginTop = "12px";
+      const edit = document.createElement("button"); edit.type = "button"; edit.textContent = "Edit";
+      edit.onclick = function() {
+        editingNoticeId = doc.id;
+        document.getElementById("noticeTitle").value = d.title || "";
+        document.getElementById("noticeContent").value = d.content || "";
+        document.getElementById("noticeLink").value = d.link || "";
+        document.getElementById("noticeActive").checked = d.active === true;
+        document.getElementById("noticeSaveButton").textContent = "बदलाव सेव करें";
+        document.getElementById("noticeCancelButton").style.display = "inline-block";
+        document.getElementById("noticeForm").scrollIntoView({behavior:"smooth"});
+      };
+      const del = document.createElement("button"); del.type = "button";
+      del.className = "delete"; del.textContent = "Delete";
+      del.onclick = async function() {
+        if (!confirm("क्या आप यह सूचना हमेशा के लिए हटाना चाहते हैं?")) return;
+        try {
+          await db.collection("notices").doc(doc.id).delete();
+          if (editingNoticeId === doc.id) resetNoticeForm();
+          await loadNotices();
+          msg.textContent = "सूचना हटा दी गई।";
+        } catch(e) { msg.textContent = "सूचना हट नहीं सकी: " + e.message; }
+      };
+      actions.append(edit,del); card.appendChild(actions); list.appendChild(card);
+    });
+  } catch(e) {
+    console.error(e);
+    msg.textContent = "सूचनाएँ लोड नहीं हुईं: " + e.message + " — Firestore Rules में notices की अनुमति जाँचें।";
+  }
+}
+
+document.getElementById("noticeForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const title = document.getElementById("noticeTitle").value.trim();
+  const content = document.getElementById("noticeContent").value.trim();
+  const link = document.getElementById("noticeLink").value.trim();
+  const active = document.getElementById("noticeActive").checked;
+  const msg = document.getElementById("noticeMessage");
+  if (link && !/^https:\\/\\/.+/i.test(link)) {
+    msg.textContent = "कृपया पूरा सुरक्षित लिंक https:// से शुरू करके लिखें।"; return;
+  }
+  const data = {title,content,link,active,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  try {
+    if (editingNoticeId) {
+      await db.collection("notices").doc(editingNoticeId).update(data);
+      msg.textContent = "सूचना में बदलाव सेव हो गया।";
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection("notices").add(data);
+      msg.textContent = "नई सूचना सेव हो गई।";
+    }
+    resetNoticeForm();
+    await loadNotices();
+  } catch(e) {
+    console.error(e);
+    msg.textContent = "सूचना सेव नहीं हुई: " + e.message + " — Firestore Rules में notices की write अनुमति जाँचें।";
+  }
+});
+document.getElementById("noticeCancelButton").addEventListener("click", resetNoticeForm);
+
 
 // LOAD ADMISSIONS
 

@@ -680,7 +680,7 @@ document.getElementById("noticeForm").addEventListener("submit", async function(
   const link = document.getElementById("noticeLink").value.trim();
   const active = document.getElementById("noticeActive").checked;
   const msg = document.getElementById("noticeMessage");
-  if (link && !/^https:\\/\\/.+/i.test(link)) {
+  if (link && !/^https:\/\/.+/i.test(link)) {
     msg.textContent = "कृपया पूरा सुरक्षित लिंक https:// से शुरू करके लिखें।"; return;
   }
   const data = {title,content,link,active,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
